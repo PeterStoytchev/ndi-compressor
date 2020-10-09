@@ -58,12 +58,63 @@ NdiManager::~NdiManager()
 	NDIlib_destroy();
 }
 
-NDIlib_recv_instance_t* NdiManager::getRecever()
+void NdiManager::SendAndFreeVideo(NDIlib_video_frame_v2_t* p_video_data)
 {
-	return &m_recvInstance;
+	SendVideo(p_video_data);
+	FreeVideo(p_video_data);
 }
 
-NDIlib_send_instance_t* NdiManager::getSender()
+void NdiManager::SendAndFreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
 {
-	return &m_sendInstance;
+	SendAudio(p_audio_data);
+	FreeAudio(p_audio_data);
+}
+
+NDIlib_video_frame_v2_t NdiManager::CaptureVideoFrame()
+{
+	NDIlib_video_frame_v2_t video_frame;
+
+	NDIlib_frame_type_e frameType = NDIlib_recv_capture_v2(m_recvInstance, &video_frame, nullptr, nullptr, 5000);
+
+	return video_frame;
+}
+
+NDIlib_audio_frame_v2_t NdiManager::CaptureAudioFrame()
+{
+	NDIlib_audio_frame_v2_t audio_frame;
+
+	NDIlib_frame_type_e frameType = NDIlib_recv_capture_v2(m_recvInstance, nullptr, &audio_frame, nullptr, 5000);
+
+	return audio_frame;
+}
+
+std::tuple<NDIlib_video_frame_v2_t, NDIlib_audio_frame_v2_t, NDIlib_frame_type_e> NdiManager::CaptureFrame()
+{
+	NDIlib_video_frame_v2_t video_frame;
+	NDIlib_audio_frame_v2_t audio_frame;
+
+	NDIlib_frame_type_e frameType = NDIlib_recv_capture_v2(m_recvInstance, &video_frame, &audio_frame, nullptr, 5000);
+
+	return std::make_tuple(video_frame, audio_frame, frameType);
+}
+
+void NdiManager::SendVideo(const NDIlib_video_frame_v2_t* p_video_data)
+{
+	NDIlib_send_send_video_v2(m_sendInstance, p_video_data);
+}
+
+void NdiManager::SendAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
+{
+	NDIlib_send_send_audio_v2(m_sendInstance, p_audio_data);
+}
+
+
+void NdiManager::FreeVideo(const NDIlib_video_frame_v2_t* p_video_data)
+{
+	NDIlib_recv_free_video_v2(m_recvInstance, p_video_data);
+}
+
+void NdiManager::FreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
+{
+	NDIlib_recv_free_audio_v2(m_recvInstance, p_audio_data);
 }
