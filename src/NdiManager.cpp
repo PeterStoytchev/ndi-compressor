@@ -2,8 +2,11 @@
 
 NdiManager::NdiManager(const char* srcName, const char* dstName)
 {
+	if (!NDIlib_initialize()) assert(0);
+
 	NDIlib_find_instance_t findInstance = NDIlib_find_create_v2();
-	if (!findInstance) { assert(0);  }
+	if (!findInstance)
+		assert(0);
 
 	uint32_t no_sources = 0;
 	bool found = false;
@@ -20,7 +23,8 @@ NdiManager::NdiManager(const char* srcName, const char* dstName)
 				found = true;
 
 				m_recvInstance = NDIlib_recv_create_v3();
-				if (!m_recvInstance) { assert(0); }
+				if (!m_recvInstance) 
+					assert(0);
 
 				NDIlib_recv_connect(m_recvInstance, p_sources + i);
 
@@ -38,5 +42,28 @@ NdiManager::NdiManager(const char* srcName, const char* dstName)
 
 	NDIlib_find_destroy(findInstance);
 
+	NDIlib_send_create_t NDI_send_create_desc;
+	NDI_send_create_desc.p_ndi_name = dstName;
 
+	m_sendInstance = NDIlib_send_create(&NDI_send_create_desc);
+	if (!m_sendInstance) 
+		assert(0);
+}
+
+NdiManager::~NdiManager()
+{
+	NDIlib_recv_destroy(m_recvInstance);
+	NDIlib_send_destroy(m_sendInstance);
+
+	NDIlib_destroy();
+}
+
+NDIlib_recv_instance_t* NdiManager::getRecever()
+{
+	return &m_recvInstance;
+}
+
+NDIlib_send_instance_t* NdiManager::getSender()
+{
+	return &m_sendInstance;
 }
