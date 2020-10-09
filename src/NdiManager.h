@@ -22,11 +22,8 @@ public:
 	void SendAndFreeVideo(NDIlib_video_frame_v2_t* p_video_data);
 	void SendAndFreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data);
 
-	NDIlib_video_frame_v2_t CaptureVideoFrame();
-	NDIlib_audio_frame_v2_t CaptureAudioFrame();
-
-	std::tuple<NDIlib_video_frame_v2_t, NDIlib_audio_frame_v2_t, NDIlib_frame_type_e> CaptureFrame();
-
+	NDIlib_video_frame_v2_t* CaptureVideoFrame();
+	NDIlib_audio_frame_v2_t* CaptureAudioFrame();
 
 private:
 	NDIlib_recv_instance_t m_recvInstance;
