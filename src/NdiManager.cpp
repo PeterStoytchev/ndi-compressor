@@ -28,13 +28,13 @@ NdiManager::NdiManager(const char* srcName, const char* dstName)
 
 				NDIlib_recv_connect(m_recvInstance, p_sources + i);
 
-				printf("Source %s, found and connected!", p_sources[i].p_ndi_name);
+				printf("Source %s, found and connected!\n", p_sources[i].p_ndi_name);
 			}
 		}
 
 		if (!found)
 		{
-			printf("Source %s not found. Waiting 1000ms before trying again!", srcName);
+			printf("Source %s not found. Waiting 1000ms before trying again!\n", srcName);
 
 			NDIlib_find_wait_for_sources(findInstance, 1000);
 		}

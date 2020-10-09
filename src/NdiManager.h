@@ -1,7 +1,8 @@
 #pragma once
 
 #include <assert.h>
-#include <iostream>
+#include <cstdio>
+#include <string>
 
 #include "Processing.NDI.Lib.h"
 
