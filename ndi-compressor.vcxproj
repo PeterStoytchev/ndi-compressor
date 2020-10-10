@@ -168,10 +168,12 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Compressor.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\NdiManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Compressor.h" />
     <ClInclude Include="src\NdiManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
