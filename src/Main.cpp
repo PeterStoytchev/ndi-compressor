@@ -3,19 +3,7 @@
 #include <atomic>
 
 #include "NdiManager.h"
-#include "Compressor.h"
-
-extern "C"
-{
-	#include "libswscale/swscale.h"
-
-	#pragma comment(lib, "avutil")
-	#pragma comment(lib, "swscale")
-
-	#pragma comment(lib, "liblz4_static")
-}
-
-
+#include "Encoder.h"
 
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
@@ -26,10 +14,21 @@ static void sigint_handler(int)
 
 void VideoHandler(NdiManager* ndiManager)
 {
+	EncoderSettings encSettings;
+	encSettings.bitrate = 2500;
+
+	Encoder encoder(encSettings);
+
 	while (!exit_loop)
 	{
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
+		encoder.Encode(video_frame);
+
+		printf("Send to server!\n");
+
+		ndiManager->FreeVideo(video_frame);
 	}
+
 }
 
 void AudioHandler(NdiManager* ndiManager)

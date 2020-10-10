@@ -170,10 +170,11 @@
   <ItemGroup>
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\NdiManager.cpp" />
+    <ClCompile Include="src\Encoder.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Compressor.h" />
     <ClInclude Include="src\NdiManager.h" />
+    <ClInclude Include="src\Encoder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
