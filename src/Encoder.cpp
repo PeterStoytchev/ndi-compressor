@@ -40,7 +40,7 @@ Encoder::Encoder(EncoderSettings settings)
 	ret = av_frame_get_buffer(frame, 0);
 }
 
-std::tuple<size_t, uint8_t*> Encoder::Encode(NDI_VIDEO_FRAME* ndi_frame)
+std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
 	ret = av_frame_make_writable(frame);
 
@@ -66,7 +66,7 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDI_VIDEO_FRAME* ndi_frame)
 	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 	{
 		//i++;
-		printf("Buffering frame... send empty!");
+		printf("Buffering frame... send empty!\n");
 		return std::make_tuple(0, nullptr);
 	}
 	else if (ret < 0)

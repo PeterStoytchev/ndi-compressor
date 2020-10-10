@@ -2,8 +2,10 @@
 #include <thread>
 #include <atomic>
 
-#include "NdiManager.h"
 #include "Encoder.h"
+#include "NdiManager.h"
+#include "FrameSender.h"
+
 
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
@@ -12,8 +14,9 @@ static void sigint_handler(int)
 }
 
 
-void VideoHandler(NdiManager* ndiManager)
+void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
+	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 	EncoderSettings encSettings;
 	encSettings.bitrate = 2500;
 
@@ -22,20 +25,38 @@ void VideoHandler(NdiManager* ndiManager)
 	while (!exit_loop)
 	{
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
-		encoder.Encode(video_frame);
+		auto [dataSize, data] = encoder.Encode(video_frame);
 
-		printf("Send to server!\n");
+		if (dataSize != 0)
+		{
+			frameSender->SendVideoFrame(video_frame, data, dataSize);
+		}
+		else
+		{
+			NDIlib_video_frame_v2_t bsFrame = NDIlib_video_frame_v2_t(1,1);
+			bsFrame.timecode = video_frame->timecode;
+			bsFrame.timestamp = video_frame->timestamp;
+
+			frameSender->SendVideoFrame(&bsFrame, bsBuffer, 2);
+
+			ndiManager->FreeVideo(&bsFrame);
+		}
 
 		ndiManager->FreeVideo(video_frame);
+
 	}
 
 }
 
-void AudioHandler(NdiManager* ndiManager)
+void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	while (!exit_loop)
 	{
 		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
+
+		frameSender->SendAudioFrame(audio_frame);
+
+		ndiManager->FreeAudio(audio_frame);
 	}
 }
 
@@ -44,12 +65,15 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
+	FrameSender* frameSender = new FrameSender("192.168.1.102", 1337, 1338);
 	NdiManager* ndiManager = new NdiManager("NDISource", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
+	
 
-	std::thread handler(VideoHandler, ndiManager);
-	AudioHandler(ndiManager);
+	std::thread handler(VideoHandler, ndiManager, frameSender);
+	AudioHandler(ndiManager, frameSender);
 
 	handler.join();
 
 	delete ndiManager;
+	delete frameSender;
 }

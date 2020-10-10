@@ -29,12 +29,18 @@
     <ClCompile Include="src\Encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\FrameSender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\NdiManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Encoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FrameSender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
