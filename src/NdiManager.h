@@ -26,6 +26,6 @@ public:
 	NDIlib_audio_frame_v2_t* CaptureAudioFrame();
 
 private:
-	NDIlib_recv_instance_t m_recvInstance;
-	NDIlib_send_instance_t m_sendInstance;
+	NDIlib_recv_instance_t m_recvInstance = NULL;
+	NDIlib_send_instance_t m_sendInstance = NULL;
 };

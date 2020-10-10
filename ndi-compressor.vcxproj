@@ -168,7 +168,6 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Compressor.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\NdiManager.cpp" />
   </ItemGroup>
