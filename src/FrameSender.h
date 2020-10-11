@@ -24,6 +24,8 @@ public:
 	void SendVideoFrame(NDIlib_video_frame_v2_t* ndi_frame, uint8_t* data, size_t dataSize);
 	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
 
+	void WaitForConfirmation();
+
 private:
 	sockpp::tcp_connector m_videoConn;
 	sockpp::tcp_connector m_audioConn;

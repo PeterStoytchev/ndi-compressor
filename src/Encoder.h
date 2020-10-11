@@ -28,9 +28,9 @@ struct EncoderSettings
 	const char* encoderName = "h264_nvenc";
 	int64_t bitrate;
 
-	AVPixelFormat pix_fmt = AV_PIX_FMT_NV12;
-	int gop_size = 10;
-	int max_b_frames = 1;
+	AVPixelFormat pix_fmt = AV_PIX_FMT_YUV420P;
+	int gop_size = 4;
+	int max_b_frames = 2;
 
 	int xres = 1920;
 	int yres = 1080;

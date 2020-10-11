@@ -18,7 +18,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 	EncoderSettings encSettings;
-	encSettings.bitrate = 2500;
+	encSettings.bitrate = 2500000;
 
 	Encoder encoder(encSettings);
 
@@ -44,6 +44,8 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 		ndiManager->FreeVideo(video_frame);
 
+		frameSender->WaitForConfirmation();
+
 	}
 
 }
@@ -65,7 +67,7 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
-	FrameSender* frameSender = new FrameSender("192.168.1.102", 1337, 1338);
+	FrameSender* frameSender = new FrameSender("192.168.1.105", 1337, 1338);
 	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (NDISource)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 	
 

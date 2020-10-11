@@ -62,3 +62,12 @@ void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 		printf("Failed to write audio data!\nError: %s\n", m_audioConn.last_error_str());
 	}
 }
+
+void FrameSender::WaitForConfirmation()
+{
+	char c = 0;
+	if (m_videoConn.read_n(&c, sizeof(c)) == -1)
+	{
+		printf("Failed to receve confirmation!\nError: %s\n", m_videoConn.last_error_str().c_str());
+	}
+}
