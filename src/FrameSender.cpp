@@ -37,12 +37,12 @@ void FrameSender::SendVideoFrame(NDIlib_video_frame_v2_t* ndi_frame, uint8_t* da
 
 	if (m_videoConn.write_n(&frame, sizeof(frame)) != sizeof(frame))
 	{
-		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str());
+		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
 	if (m_videoConn.write_n(data, dataSize) != dataSize)
 	{
-		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str());
+		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 }
 

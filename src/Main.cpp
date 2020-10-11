@@ -66,7 +66,7 @@ int main()
 	signal(SIGINT, sigint_handler);
 
 	FrameSender* frameSender = new FrameSender("192.168.1.102", 1337, 1338);
-	NdiManager* ndiManager = new NdiManager("NDISource", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
+	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (NDISource)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 	
 
 	std::thread handler(VideoHandler, ndiManager, frameSender);

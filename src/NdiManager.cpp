@@ -6,6 +6,7 @@ NdiManager::NdiManager(const char* srcName, const char* dstName)
 
 	if (srcName != nullptr)
 	{
+		std::string srcNameStr = std::string(srcName);
 		NDIlib_find_instance_t findInstance = NDIlib_find_create_v2();
 		if (!findInstance)
 			assert(0);
@@ -20,7 +21,7 @@ NdiManager::NdiManager(const char* srcName, const char* dstName)
 			// Display all the sources.
 			for (uint32_t i = 0; i < no_sources; i++)
 			{
-				if (strcmp(srcName, p_sources[i].p_ndi_name))
+				if (strcmp(srcName, p_sources[i].p_ndi_name) == 0)
 				{
 					found = true;
 
