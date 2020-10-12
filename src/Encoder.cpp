@@ -23,6 +23,7 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext->pix_fmt = m_settings.pix_fmt;
 	codecContext->max_b_frames = m_settings.max_b_frames;
 
+
 	swsContext = sws_getContext(m_settings.xres, m_settings.yres, AV_PIX_FMT_UYVY422, m_settings.xres, m_settings.yres, m_settings.pix_fmt, SWS_POINT | SWS_BITEXACT, 0, 0, 0);
 
 	frame->format = codecContext->pix_fmt;
@@ -33,13 +34,6 @@ Encoder::Encoder(EncoderSettings settings)
 	av_opt_set(codecContext->priv_data, "preset", "llhq", 0);
 	av_opt_set(codecContext->priv_data, "rc", "cbr", 0);
 
-	/*
-	av_opt_set(codecContext->priv_data, "profile", "high", 0);
-	av_opt_set(codecContext->priv_data, "rc-lookahead", "8", 0);
-	*/
-
-	//av_opt_set(codecContext->priv_data, "level", "5.1", 0);
-
 	if (avcodec_open2(codecContext, codec, NULL) < 0)
 	{
 		printf("Could not open codec!\n");
@@ -47,7 +41,7 @@ Encoder::Encoder(EncoderSettings settings)
 	}
 
 	
-	ret = av_frame_get_buffer(frame, 0);
+	ret = av_frame_get_buffer(frame, 32);
 }
 
 std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)

@@ -29,6 +29,8 @@ public:
 private:
 	sockpp::tcp_connector m_videoConn;
 	sockpp::tcp_connector m_audioConn;
+
+	int warmupFrames = 2;
 };
 
 
