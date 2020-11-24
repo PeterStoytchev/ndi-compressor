@@ -29,7 +29,7 @@ struct EncoderSettings
 	int64_t bitrate;
 
 	AVPixelFormat pix_fmt = AV_PIX_FMT_YUV420P;
-	int gop_size = 30;
+	int gop_size = 1;
 	int max_b_frames = 0;
 
 	int xres = 1920;

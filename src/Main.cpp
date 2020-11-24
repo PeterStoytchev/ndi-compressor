@@ -2,10 +2,15 @@
 #include <thread>
 #include <atomic>
 
+
 #include "Encoder.h"
 #include "NdiManager.h"
 #include "FrameSender.h"
 
+
+#include <windows.h>
+#include <tchar.h>
+#include <dxgi.h>
 
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
@@ -18,7 +23,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 	EncoderSettings encSettings;
-	encSettings.bitrate = 2500000;
+	encSettings.bitrate = 2500000 * 2;
 
 	Encoder encoder(encSettings);
 
@@ -67,7 +72,13 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
-	FrameSender* frameSender = new FrameSender("192.168.1.103", 1337, 1338);
+	if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
+	{
+		std::cout << "fuck\n";
+	}
+
+	//FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
+	FrameSender* frameSender = new FrameSender("192.168.1.105", 1337, 1338);
 	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (NDISource)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 	
 
