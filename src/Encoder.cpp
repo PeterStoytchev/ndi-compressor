@@ -11,11 +11,10 @@ Encoder::Encoder(EncoderSettings settings)
 	frame = av_frame_alloc();
 	pkt = av_packet_alloc();
 
-	codec = avcodec_find_encoder_by_name("libx264");
+	codec = avcodec_find_encoder_by_name(settings.encoderName);
 	
 	codecContext = avcodec_alloc_context3(codec);
 
-	codecContext->bit_rate = m_settings.bitrate * 10;
 	codecContext->width = m_settings.xres;
 	codecContext->height = m_settings.yres;
 	codecContext->time_base = { 1, m_settings.fps };
@@ -23,8 +22,6 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext->pix_fmt = m_settings.pix_fmt;
 	codecContext->max_b_frames = m_settings.max_b_frames;
 
-	codecContext->slices = 8;
-	codecContext->thread_count = 8;
 
 	swsContext = sws_getContext(m_settings.xres, m_settings.yres, AV_PIX_FMT_UYVY422, m_settings.xres, m_settings.yres, m_settings.pix_fmt, SWS_POINT | SWS_BITEXACT, 0, 0, 0);
 
@@ -33,12 +30,14 @@ Encoder::Encoder(EncoderSettings settings)
 	frame->width = codecContext->width;
 	frame->height = codecContext->height;
 
-	av_opt_set(codecContext->priv_data, "profile", "high", 0);
-	av_opt_set(codecContext->priv_data, "preset", "superfast", 0);
-	av_opt_set(codecContext->priv_data, "rc", "crf", 0);
-	av_opt_set(codecContext->priv_data, "crf", "18.0", 0);
-	av_opt_set(codecContext->priv_data, "tune", "fastdecode", 0);
+	//av_opt_set(codecContext->priv_data, "preset", "lossless", 0);
 
+	av_opt_set(codecContext->priv_data, "preset", "llhq", 0);
+	av_opt_set(codecContext->priv_data, "tier", "high", 0);
+	av_opt_set(codecContext->priv_data, "spatial_aq", "1", 0);
+	
+	av_opt_set(codecContext->priv_data, "rc", "constqp", 0);
+	av_opt_set(codecContext->priv_data, "qp", "22", 0);
 
 	if (avcodec_open2(codecContext, codec, NULL) < 0)
 	{
@@ -75,7 +74,6 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 	ret = avcodec_receive_packet(codecContext, pkt);
 	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 	{
-		//i++;
 		printf("Buffering frame... send empty!\n");
 		return std::make_tuple(0, nullptr);
 	}

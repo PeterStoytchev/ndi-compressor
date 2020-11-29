@@ -29,18 +29,16 @@ FrameSender::~FrameSender()
 	m_audioConn.close();
 }
 
-void FrameSender::SendVideoFrame(NDIlib_video_frame_v2_t* ndi_frame, uint8_t* data, size_t dataSize)
-{
-	VideoFrame frame;
-	frame.videoFrame = *ndi_frame;
-	frame.dataSize = dataSize;
 
+void FrameSender::SendVideoFrame(VideoFramePair frame, uint8_t* data)
+{
 	if (m_videoConn.write_n(&frame, sizeof(frame)) != sizeof(frame))
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	if (m_videoConn.write_n(data, dataSize) != dataSize)
+	size_t finalSize = frame.dataSize1 + frame.dataSize2;
+	if (m_videoConn.write_n(data, finalSize) != finalSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}

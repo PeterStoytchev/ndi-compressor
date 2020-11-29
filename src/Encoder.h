@@ -25,11 +25,11 @@ extern "C"
 
 struct EncoderSettings
 {
-	const char* encoderName = "h264_nvenc";
+	const char* encoderName = "hevc_nvenc";
 	int64_t bitrate;
 
 	AVPixelFormat pix_fmt = AV_PIX_FMT_YUV420P;
-	int gop_size = 1;
+	int gop_size = 30;
 	int max_b_frames = 0;
 
 	int xres = 1920;

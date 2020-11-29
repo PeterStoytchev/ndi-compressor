@@ -7,11 +7,6 @@
 #include "NdiManager.h"
 #include "FrameSender.h"
 
-
-#include <windows.h>
-#include <tchar.h>
-#include <dxgi.h>
-
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
 {
@@ -27,14 +22,30 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 	Encoder encoder(encSettings);
 
+	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 4);
+
 	while (!exit_loop)
 	{
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
+		NDIlib_video_frame_v2_t* video_frame2 = ndiManager->CaptureVideoFrame();
+		
 		auto [dataSize, data] = encoder.Encode(video_frame);
+		memmove(sendingBuffer, data, dataSize);
 
-		if (dataSize != 0)
+		auto [dataSize2, data2] = encoder.Encode(video_frame2);
+
+		if (dataSize != 0 && dataSize2 != 0)
 		{
-			frameSender->SendVideoFrame(video_frame, data, dataSize);
+			VideoFramePair pair;
+			pair.dataSize1 = dataSize;
+			pair.dataSize2 = dataSize2;
+
+			pair.videoFrame1 = *video_frame;
+			pair.videoFrame2 = *video_frame2;
+
+			memmove(sendingBuffer + dataSize, data2, dataSize2);
+
+			frameSender->SendVideoFrame(pair, sendingBuffer);
 		}
 		else
 		{
@@ -42,17 +53,26 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			bsFrame.timecode = video_frame->timecode;
 			bsFrame.timestamp = video_frame->timestamp;
 
-			frameSender->SendVideoFrame(&bsFrame, bsBuffer, 2);
+			VideoFramePair pair;
+			pair.dataSize1 = 2;
+			pair.dataSize2 = 2;
+
+			pair.videoFrame1 = bsFrame;
+			pair.videoFrame2 = bsFrame;
+
+			frameSender->SendVideoFrame(pair, bsBuffer);
 
 			ndiManager->FreeVideo(&bsFrame);
 		}
 
 		ndiManager->FreeVideo(video_frame);
+		ndiManager->FreeVideo(video_frame2);
 
 		frameSender->WaitForConfirmation();
 
 	}
 
+	free(sendingBuffer);
 }
 
 void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
@@ -72,15 +92,9 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
-	if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
-	{
-		std::cout << "fuck\n";
-	}
-
-	//FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
-	FrameSender* frameSender = new FrameSender("192.168.1.105", 1337, 1338);
-	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (NDISource)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
-	
+	//FrameSender* frameSender = new FrameSender("213.214.65.185", 1337, 1338);
+	FrameSender* frameSender = new FrameSender("192.168.1.106", 1337, 1338);
+	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (wronghousefool)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 
 	std::thread handler(VideoHandler, ndiManager, frameSender);
 	AudioHandler(ndiManager, frameSender);

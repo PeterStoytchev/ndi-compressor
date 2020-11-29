@@ -15,29 +15,12 @@
 #include "sockpp/tcp_connector.h"
 #include "sockpp/version.h"
 
-class FrameSender
+struct VideoFramePair
 {
-public:
-	FrameSender(const char* host, in_port_t videoPort, in_port_t audioPort);
-	~FrameSender();
-
-	void SendVideoFrame(NDIlib_video_frame_v2_t* ndi_frame, uint8_t* data, size_t dataSize);
-	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
-
-	void WaitForConfirmation();
-
-private:
-	sockpp::tcp_connector m_videoConn;
-	sockpp::tcp_connector m_audioConn;
-
-	int warmupFrames = 2;
-};
-
-
-struct VideoFrame
-{
-	size_t dataSize;
-	NDIlib_video_frame_v2_t videoFrame;
+	size_t dataSize1;
+	size_t dataSize2;
+	NDIlib_video_frame_v2_t videoFrame1;
+	NDIlib_video_frame_v2_t videoFrame2;
 };
 
 struct AudioFrame
@@ -45,3 +28,22 @@ struct AudioFrame
 	size_t dataSize;
 	NDIlib_audio_frame_v2_t audioFrame;
 };
+
+
+class FrameSender
+{
+public:
+	FrameSender(const char* host, in_port_t videoPort, in_port_t audioPort);
+	~FrameSender();
+
+	void SendVideoFrame(VideoFramePair frame, uint8_t* data);
+	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
+
+	void WaitForConfirmation();
+
+private:
+	sockpp::tcp_connector m_videoConn;
+	sockpp::tcp_connector m_audioConn;
+};
+
+
