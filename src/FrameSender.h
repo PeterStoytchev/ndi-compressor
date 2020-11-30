@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assert.h>
+#include <future>
 
 #include "Processing.NDI.Lib.h"
 
@@ -15,12 +16,12 @@
 #include "sockpp/tcp_connector.h"
 #include "sockpp/version.h"
 
-struct VideoFramePair
+struct VideoFrame
 {
-	size_t dataSize1;
-	size_t dataSize2;
-	NDIlib_video_frame_v2_t videoFrame1;
-	NDIlib_video_frame_v2_t videoFrame2;
+	bool isSingle = false;
+	size_t buf1;
+	size_t buf2;
+	NDIlib_video_frame_v2_t videoFrame;
 };
 
 struct AudioFrame
@@ -36,13 +37,15 @@ public:
 	FrameSender(const char* host, in_port_t videoPort, in_port_t audioPort);
 	~FrameSender();
 
-	void SendVideoFrame(VideoFramePair frame, uint8_t* data);
+	void SendVideoFrame(VideoFrame frame, uint8_t* data);
+	//void SendVideoFrameAux(uint8_t* data, size_t size);
 	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
 
 	void WaitForConfirmation();
 
 private:
 	sockpp::tcp_connector m_videoConn;
+	sockpp::tcp_connector m_videoConnAux;
 	sockpp::tcp_connector m_audioConn;
 };
 

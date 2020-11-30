@@ -1,7 +1,7 @@
 #include <csignal>
 #include <thread>
 #include <atomic>
-
+#include <windows.h>
 
 #include "Encoder.h"
 #include "NdiManager.h"
@@ -27,25 +27,25 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 	while (!exit_loop)
 	{
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
-		NDIlib_video_frame_v2_t* video_frame2 = ndiManager->CaptureVideoFrame();
 		
 		auto [dataSize, data] = encoder.Encode(video_frame);
-		memmove(sendingBuffer, data, dataSize);
 
-		auto [dataSize2, data2] = encoder.Encode(video_frame2);
-
-		if (dataSize != 0 && dataSize2 != 0)
+		if (dataSize != 0)
 		{
-			VideoFramePair pair;
-			pair.dataSize1 = dataSize;
-			pair.dataSize2 = dataSize2;
+			VideoFrame pair;
+			if (dataSize % 2 == 0)
+			{
+				pair.buf1, pair.buf2 = dataSize / 2;
+			}
+			else
+			{
+				pair.buf1 = (dataSize - 1) / 2;
+				pair.buf2 = dataSize - pair.buf1;
+			}
+			
+			pair.videoFrame = *video_frame;
 
-			pair.videoFrame1 = *video_frame;
-			pair.videoFrame2 = *video_frame2;
-
-			memmove(sendingBuffer + dataSize, data2, dataSize2);
-
-			frameSender->SendVideoFrame(pair, sendingBuffer);
+			frameSender->SendVideoFrame(pair, data);
 		}
 		else
 		{
@@ -53,12 +53,11 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			bsFrame.timecode = video_frame->timecode;
 			bsFrame.timestamp = video_frame->timestamp;
 
-			VideoFramePair pair;
-			pair.dataSize1 = 2;
-			pair.dataSize2 = 2;
+			VideoFrame pair;
+			pair.buf1 = 1;
+			pair.isSingle = true;
 
-			pair.videoFrame1 = bsFrame;
-			pair.videoFrame2 = bsFrame;
+			pair.videoFrame = bsFrame;
 
 			frameSender->SendVideoFrame(pair, bsBuffer);
 
@@ -66,7 +65,6 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 		}
 
 		ndiManager->FreeVideo(video_frame);
-		ndiManager->FreeVideo(video_frame2);
 
 		frameSender->WaitForConfirmation();
 

@@ -11,6 +11,13 @@ FrameSender::FrameSender(const char* host, in_port_t videoPort, in_port_t audioP
 		assert(0);
 	}
 
+	m_videoConnAux.connect({ host, videoPort });
+	if (!m_videoConnAux)
+	{
+		printf("Error creating video connection aux to to %s over port %u!\nError: %s.\n", host, videoPort, m_videoConn.last_error_str());
+		assert(0);
+	}
+
 	printf("Video connection created to: %s at port %u.\n", host, videoPort);
 
 	m_audioConn.connect({ host, audioPort });
@@ -26,22 +33,36 @@ FrameSender::FrameSender(const char* host, in_port_t videoPort, in_port_t audioP
 FrameSender::~FrameSender()
 {
 	m_videoConn.close();
+	m_videoConnAux.close();
 	m_audioConn.close();
 }
 
 
-void FrameSender::SendVideoFrame(VideoFramePair frame, uint8_t* data)
+void FrameSender::SendVideoFrame(VideoFrame frame, uint8_t* data)
 {
 	if (m_videoConn.write_n(&frame, sizeof(frame)) != sizeof(frame))
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	size_t finalSize = frame.dataSize1 + frame.dataSize2;
-	if (m_videoConn.write_n(data, finalSize) != finalSize)
+	std::future<void> promise;
+	if (!frame.isSingle)
+	{
+		promise = std::async(std::launch::async, [data, frame, conn = std::ref(m_videoConnAux)]()
+		{
+			if (conn.get().write_n(data + frame.buf1, frame.buf2) != frame.buf2)
+			{
+				printf("THREAD 2: Failed to write video data!\nError: %s\n", conn.get().last_error_str().c_str());
+			}
+		});
+	}
+
+	if (m_videoConn.write_n(data, frame.buf1) != frame.buf1)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
+
+	promise.get(); //make sure that the other thread finishes
 }
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
