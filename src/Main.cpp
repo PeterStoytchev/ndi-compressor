@@ -1,7 +1,6 @@
 #include <csignal>
 #include <thread>
 #include <atomic>
-#include <windows.h>
 
 #include "Encoder.h"
 #include "NdiManager.h"
@@ -22,7 +21,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 	Encoder encoder(encSettings);
 
-	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 4);
+	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 2);
 
 	while (!exit_loop)
 	{
@@ -35,7 +34,8 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			VideoFrame pair;
 			if (dataSize % 2 == 0)
 			{
-				pair.buf1, pair.buf2 = dataSize / 2;
+				pair.buf1 = dataSize / 2;
+				pair.buf2 = dataSize / 2;
 			}
 			else
 			{

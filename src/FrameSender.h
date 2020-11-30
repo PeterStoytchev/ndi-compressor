@@ -19,8 +19,8 @@
 struct VideoFrame
 {
 	bool isSingle = false;
-	size_t buf1;
-	size_t buf2;
+	size_t buf1 = 0;
+	size_t buf2 = 0;
 	NDIlib_video_frame_v2_t videoFrame;
 };
 
@@ -38,7 +38,7 @@ public:
 	~FrameSender();
 
 	void SendVideoFrame(VideoFrame frame, uint8_t* data);
-	//void SendVideoFrameAux(uint8_t* data, size_t size);
+	void SendVideoFrameAux();
 	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
 
 	void WaitForConfirmation();
@@ -47,6 +47,11 @@ private:
 	sockpp::tcp_connector m_videoConn;
 	sockpp::tcp_connector m_videoConnAux;
 	sockpp::tcp_connector m_audioConn;
+
+	std::atomic<bool> shouldRun = false;
+	uint8_t* auxData;
+	size_t auxSize1;
+	size_t auxSize2;
 };
 
 

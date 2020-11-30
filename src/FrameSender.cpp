@@ -45,24 +45,29 @@ void FrameSender::SendVideoFrame(VideoFrame frame, uint8_t* data)
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	std::future<void> promise;
-	if (!frame.isSingle)
-	{
-		promise = std::async(std::launch::async, [data, frame, conn = std::ref(m_videoConnAux)]()
-		{
-			if (conn.get().write_n(data + frame.buf1, frame.buf2) != frame.buf2)
-			{
-				printf("THREAD 2: Failed to write video data!\nError: %s\n", conn.get().last_error_str().c_str());
-			}
-		});
-	}
+	auxData = data;
+	auxSize1 = frame.buf1;
+	auxSize2 = frame.buf2;
+	shouldRun = true;
 
 	if (m_videoConn.write_n(data, frame.buf1) != frame.buf1)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	promise.get(); //make sure that the other thread finishes
+	while (!shouldRun);
+}
+
+void FrameSender::SendVideoFrameAux()
+{
+	while (shouldRun)
+	{
+		if (m_videoConnAux.write_n(auxData + auxSize1, auxSize2) != auxSize2)
+		{
+			printf("THREAD 2: Failed to write video data!\nError: %s\n", m_videoConnAux.last_error_str().c_str());
+		}
+		shouldRun = false;
+	}
 }
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
