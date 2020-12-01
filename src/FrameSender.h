@@ -48,10 +48,14 @@ private:
 	sockpp::tcp_connector m_videoConnAux;
 	sockpp::tcp_connector m_audioConn;
 
-	std::atomic<bool> shouldRun = false;
 	uint8_t* auxData;
 	size_t auxSize1;
 	size_t auxSize2;
+
+	std::mutex m;
+	std::condition_variable cv;
+	bool ready = false;
+	bool processed = false;
 };
 
 

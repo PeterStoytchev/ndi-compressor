@@ -30,14 +30,16 @@ Encoder::Encoder(EncoderSettings settings)
 	frame->width = codecContext->width;
 	frame->height = codecContext->height;
 
-	//av_opt_set(codecContext->priv_data, "preset", "lossless", 0);
+	av_opt_set(codecContext->priv_data, "preset", "lossless", 0);
 
+	/*
 	av_opt_set(codecContext->priv_data, "preset", "llhq", 0);
 	av_opt_set(codecContext->priv_data, "tier", "high", 0);
 	av_opt_set(codecContext->priv_data, "spatial_aq", "1", 0);
 	
 	av_opt_set(codecContext->priv_data, "rc", "constqp", 0);
-	av_opt_set(codecContext->priv_data, "qp", "22", 0);
+	av_opt_set(codecContext->priv_data, "qp", "36", 0);
+	*/
 
 	if (avcodec_open2(codecContext, codec, NULL) < 0)
 	{
