@@ -23,9 +23,15 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 2);
 
+	int counter = 0;
+	std::chrono::time_point<std::chrono::steady_clock> startPoint;
+
 	while (!exit_loop)
 	{
-		std::chrono::time_point<std::chrono::steady_clock> startPoint = std::chrono::high_resolution_clock::now();
+		if (counter % 4 == 0)
+		{
+			startPoint = std::chrono::high_resolution_clock::now();
+		}
 
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
 		
@@ -48,6 +54,10 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			pair.videoFrame = *video_frame;
 			pair.frameStart = startPoint;
 
+
+			//frameSender->WaitForConfirmation();
+			
+
 			frameSender->SendVideoFrame(pair, data);
 		}
 		else
@@ -61,18 +71,17 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			pair.isSingle = true;
 			pair.frameStart = startPoint;
 
-
 			pair.videoFrame = bsFrame;
 
-			frameSender->SendVideoFrame(pair, bsBuffer);
+			//frameSender->WaitForConfirmation();
 
+			frameSender->SendVideoFrame(pair, bsBuffer);
 			ndiManager->FreeVideo(&bsFrame);
 		}
 
 		ndiManager->FreeVideo(video_frame);
 
-		frameSender->WaitForConfirmation();
-
+		std::cout << "RTT: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startPoint).count() << "ms\n";
 	}
 
 	free(sendingBuffer);
@@ -95,8 +104,8 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
-	//FrameSender* frameSender = new FrameSender("213.214.65.185", 1337, 1338);
-	FrameSender* frameSender = new FrameSender("192.168.1.106", 1337, 1338);
+	FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
+	//FrameSender* frameSender = new FrameSender("192.168.1.106", 1337, 1338);
 	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (wronghousefool)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 
 	std::thread handler(VideoHandler, ndiManager, frameSender);

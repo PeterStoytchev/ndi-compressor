@@ -22,6 +22,9 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext->pix_fmt = m_settings.pix_fmt;
 	codecContext->max_b_frames = m_settings.max_b_frames;
 
+	codecContext->slices = 16;
+	codecContext->slice_count = 16;
+
 	swsContext = sws_getContext(m_settings.xres, m_settings.yres, AV_PIX_FMT_UYVY422, m_settings.xres, m_settings.yres, m_settings.pix_fmt, SWS_POINT | SWS_BITEXACT, 0, 0, 0);
 
 	frame->format = codecContext->pix_fmt;
@@ -36,7 +39,7 @@ Encoder::Encoder(EncoderSettings settings)
 	av_opt_set(codecContext->priv_data, "spatial_aq", "1", 0);
 	
 	av_opt_set(codecContext->priv_data, "rc", "constqp", 0);
-	av_opt_set(codecContext->priv_data, "qp", "22", 0);
+	av_opt_set(codecContext->priv_data, "qp", "30", 0);
 
 	if (avcodec_open2(codecContext, codec, NULL) < 0)
 	{

@@ -53,6 +53,7 @@ void FrameSender::SendVideoFrame(VideoFrame frame, uint8_t* data)
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
+
 	if (!frame.isSingle)
 	{
 		auxData = data;
@@ -119,9 +120,14 @@ void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 
 void FrameSender::WaitForConfirmation()
 {
+	//std::chrono::time_point<std::chrono::steady_clock> startPoint = std::chrono::high_resolution_clock::now();
+
 	char c = 0;
 	if (m_videoConn.read_n(&c, sizeof(c)) == -1)
 	{
 		printf("Failed to receve confirmation!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
+
+	//std::cout << "WaitForConfirmation(): " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startPoint).count() << "ms\n";
+
 }

@@ -58,5 +58,3 @@ private:
 	bool ready = false;
 	bool processed = false;
 };
-
-
