@@ -25,6 +25,8 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 	while (!exit_loop)
 	{
+		std::chrono::time_point<std::chrono::steady_clock> startPoint = std::chrono::high_resolution_clock::now();
+
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
 		
 		auto [dataSize, data] = encoder.Encode(video_frame);
@@ -44,6 +46,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			}
 			
 			pair.videoFrame = *video_frame;
+			pair.frameStart = startPoint;
 
 			frameSender->SendVideoFrame(pair, data);
 		}
@@ -56,6 +59,8 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			VideoFrame pair;
 			pair.buf1 = 1;
 			pair.isSingle = true;
+			pair.frameStart = startPoint;
+
 
 			pair.videoFrame = bsFrame;
 
