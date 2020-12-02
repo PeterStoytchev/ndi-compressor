@@ -17,7 +17,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 	EncoderSettings encSettings;
-	encSettings.bitrate = 2500000 * 2;
+	encSettings.bitrateMbps = 25;
 
 	Encoder encoder(encSettings);
 
@@ -39,26 +39,14 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 		if (dataSize != 0)
 		{
-			VideoFrame pair;
-			if (dataSize % 2 == 0)
-			{
-				pair.buf1 = dataSize / 2;
-				pair.buf2 = dataSize / 2;
-			}
-			else
-			{
-				pair.buf1 = (dataSize - 1) / 2;
-				pair.buf2 = dataSize - pair.buf1;
-			}
-			
-			pair.videoFrame = *video_frame;
-			pair.frameStart = startPoint;
+			VideoFrame frame;
+			frame.dataSize = dataSize;
 
+			frame.videoFrame = *video_frame;
 
 			//frameSender->WaitForConfirmation();
-			
 
-			frameSender->SendVideoFrame(pair, data);
+			frameSender->SendVideoFrame(frame, data);
 		}
 		else
 		{
@@ -66,16 +54,14 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			bsFrame.timecode = video_frame->timecode;
 			bsFrame.timestamp = video_frame->timestamp;
 
-			VideoFrame pair;
-			pair.buf1 = 1;
-			pair.isSingle = true;
-			pair.frameStart = startPoint;
-
-			pair.videoFrame = bsFrame;
+			VideoFrame frame;
+			frame.dataSize = 1;
+			
+			frame.videoFrame = bsFrame;
 
 			//frameSender->WaitForConfirmation();
 
-			frameSender->SendVideoFrame(pair, bsBuffer);
+			frameSender->SendVideoFrame(frame, bsBuffer);
 			ndiManager->FreeVideo(&bsFrame);
 		}
 
@@ -104,8 +90,8 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
-	FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
-	//FrameSender* frameSender = new FrameSender("192.168.1.106", 1337, 1338);
+	//FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
+	FrameSender* frameSender = new FrameSender("192.168.1.100", 1337, 1338);
 	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (wronghousefool)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 
 	std::thread handler(VideoHandler, ndiManager, frameSender);

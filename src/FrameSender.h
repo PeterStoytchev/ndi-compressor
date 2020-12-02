@@ -18,9 +18,7 @@
 
 struct VideoFrame
 {
-	size_t buf1 = 0;
-	size_t buf2 = 0;
-	bool isSingle = false;
+	size_t dataSize = 0;
 	NDIlib_video_frame_v2_t videoFrame;
 	std::chrono::time_point<std::chrono::steady_clock> frameStart;
 };

@@ -16,6 +16,7 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext = avcodec_alloc_context3(codec);
 
 	codecContext->width = m_settings.xres;
+	codecContext->bit_rate = m_settings.bitrateMbps * 1000000;
 	codecContext->height = m_settings.yres;
 	codecContext->time_base = { 1, m_settings.fps };
 	codecContext->gop_size = m_settings.gop_size;
@@ -23,7 +24,8 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext->max_b_frames = m_settings.max_b_frames;
 
 	codecContext->slices = 16;
-	codecContext->slice_count = 16;
+	codecContext->thread_count = 16;
+
 
 	swsContext = sws_getContext(m_settings.xres, m_settings.yres, AV_PIX_FMT_UYVY422, m_settings.xres, m_settings.yres, m_settings.pix_fmt, SWS_POINT | SWS_BITEXACT, 0, 0, 0);
 
@@ -32,6 +34,7 @@ Encoder::Encoder(EncoderSettings settings)
 	frame->width = codecContext->width;
 	frame->height = codecContext->height;
 
+	
 	//av_opt_set(codecContext->priv_data, "preset", "lossless", 0);
 
 	av_opt_set(codecContext->priv_data, "preset", "llhq", 0);
@@ -58,8 +61,8 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 	uint8_t* data[1] = { ndi_frame->p_data };
 	int linesize[1] = { m_settings.xres * 2 };
 
-	uint8_t* outData[3] = { frame->data[0], frame->data[1], frame->data[2]};
-	int outLinesize[3] = { m_settings.xres, m_settings.xres / 2, m_settings.xres / 2};
+	uint8_t* outData[2] = { frame->data[0], frame->data[1]};
+	int outLinesize[2] = { m_settings.xres, m_settings.xres};
 
 	sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
 
