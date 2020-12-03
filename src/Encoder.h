@@ -42,17 +42,19 @@ struct EncoderSettings
 	{
 		encoderName = settings.encoderName;
 
-		int64_t bitrateMbps = settings.bitrateMbps;
+		bitrateMbps = settings.bitrateMbps;
 
-		AVPixelFormat pix_fmt = settings.pix_fmt;
+		pix_fmt = settings.pix_fmt;
 		
-		int gop_size = settings.gop_size;
-		int max_b_frames = settings.max_b_frames;
+		gop_size = settings.gop_size;
+		max_b_frames = settings.max_b_frames;
 
-		int xres = settings.xres;
-		int yres = settings.yres;
+		xres = settings.xres;
+		yres = settings.yres;
 
-		int fps = settings.fps;
+		fps = settings.fps;
+
+		thread_count = settings.thread_count;
 
 		priv_data = settings.priv_data;
 	}
@@ -63,15 +65,17 @@ struct EncoderSettings
 
 		encoderName = config["encoderName"].as<std::string>();
 
-		int64_t bitrateMbps = config["bitrateMbps"].as<int64_t>();
+		bitrateMbps = config["bitrateMbps"].as<int64_t>();
 
-		int gop_size = config["gop_size"].as<int>();
-		int max_b_frames = config["max_b_frames"].as<int>();
+		gop_size = config["gop_size"].as<int>();
+		max_b_frames = config["max_b_frames"].as<int>();
 
-		int xres = config["xres"].as<int>();
-		int yres = config["yres"].as<int>();
+		xres = config["xres"].as<int>();
+		yres = config["yres"].as<int>();
 
-		int fps = config["fps"].as<int>();
+		fps = config["fps"].as<int>();
+
+		thread_count = config["thread_count"].as<int>();
 
 		for (const auto& kv : config["priv_data"])
 		{
@@ -90,6 +94,8 @@ struct EncoderSettings
 	int yres = 1080;
 
 	int fps = 60;
+
+	int thread_count = 0;
 
 	std::unordered_map<std::string, std::string> priv_data;
 };

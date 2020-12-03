@@ -2,6 +2,7 @@ encoderName: h264_nvenc
 bitrateMbps: 25
 gop_size: 60
 max_b_frames: 0
+thread_count: 16
 xres: 1920
 yres: 1080
 fps: 60

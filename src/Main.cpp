@@ -17,8 +17,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 	
-	EncoderSettings encSettings;
-	encSettings.bitrateMbps = 25;
+	EncoderSettings encSettings("config.yaml");
 
 	Encoder encoder(encSettings);
 

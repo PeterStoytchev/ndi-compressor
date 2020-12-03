@@ -23,8 +23,8 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext->pix_fmt = m_settings.pix_fmt;
 	codecContext->max_b_frames = m_settings.max_b_frames;
 
-	codecContext->slices = 16;
-	codecContext->thread_count = 16;
+	codecContext->slices = settings.thread_count;
+	codecContext->thread_count = settings.thread_count;
 
 
 	swsContext = sws_getContext(m_settings.xres, m_settings.yres, AV_PIX_FMT_UYVY422, m_settings.xres, m_settings.yres, m_settings.pix_fmt, SWS_POINT | SWS_BITEXACT, 0, 0, 0);

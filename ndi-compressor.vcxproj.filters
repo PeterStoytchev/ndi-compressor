@@ -18,7 +18,6 @@
     <None Include=".gitignore" />
     <None Include="LICENSE" />
     <None Include="README.md" />
-    <None Include="src\config.yaml" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
