@@ -16,6 +16,7 @@ static void sigint_handler(int)
 void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
+	
 	EncoderSettings encSettings;
 	encSettings.bitrateMbps = 25;
 
@@ -80,9 +81,6 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 		{
 			counter++;
 		}
-
-		
-
 	}
 
 	free(sendingBuffer);

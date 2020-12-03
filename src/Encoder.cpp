@@ -11,7 +11,7 @@ Encoder::Encoder(EncoderSettings settings)
 	frame = av_frame_alloc();
 	pkt = av_packet_alloc();
 
-	codec = avcodec_find_encoder_by_name(settings.encoderName);
+	codec = avcodec_find_encoder_by_name(settings.encoderName.c_str());
 	
 	codecContext = avcodec_alloc_context3(codec);
 
@@ -34,15 +34,10 @@ Encoder::Encoder(EncoderSettings settings)
 	frame->width = codecContext->width;
 	frame->height = codecContext->height;
 
-	
-	//av_opt_set(codecContext->priv_data, "preset", "lossless", 0);
-
-	av_opt_set(codecContext->priv_data, "preset", "llhq", 0);
-	av_opt_set(codecContext->priv_data, "tier", "high", 0);
-	av_opt_set(codecContext->priv_data, "spatial_aq", "1", 0);
-	
-	//av_opt_set(codecContext->priv_data, "rc", "constqp", 0);
-	//av_opt_set(codecContext->priv_data, "qp", "30", 0);
+	for (std::pair<std::string, std::string> pair : m_settings.priv_data)
+	{
+		av_opt_set(codecContext->priv_data, pair.first.c_str(), pair.second.c_str(), 0);
+	}
 
 	if (avcodec_open2(codecContext, codec, NULL) < 0)
 	{
@@ -50,7 +45,6 @@ Encoder::Encoder(EncoderSettings settings)
 		assert(0);
 	}
 
-	
 	ret = av_frame_get_buffer(frame, 0);
 }
 
