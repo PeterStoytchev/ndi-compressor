@@ -22,16 +22,15 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 	Encoder encoder(encSettings);
 
 	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 2);
-
+	 
 	int counter = 0;
+	int diviser = 7;
 	std::chrono::time_point<std::chrono::steady_clock> startPoint;
 
 	while (!exit_loop)
 	{
-		if (counter % 4 == 0)
-		{
+		if (counter % diviser == 0)
 			startPoint = std::chrono::high_resolution_clock::now();
-		}
 
 		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
 		
@@ -44,7 +43,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 			frame.videoFrame = *video_frame;
 
-			//frameSender->WaitForConfirmation();
+			frameSender->WaitForConfirmation();
 
 			frameSender->SendVideoFrame(frame, data);
 		}
@@ -59,7 +58,7 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 			
 			frame.videoFrame = bsFrame;
 
-			//frameSender->WaitForConfirmation();
+			frameSender->WaitForConfirmation();
 
 			frameSender->SendVideoFrame(frame, bsBuffer);
 			ndiManager->FreeVideo(&bsFrame);
@@ -67,7 +66,23 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
 
 		ndiManager->FreeVideo(video_frame);
 
-		std::cout << "RTT: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startPoint).count() << "ms\n";
+		if (counter % diviser == 0)
+		{
+			long long RTT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startPoint).count();
+			
+			if (RTT > 15)
+			{
+				std::cout << "RTT OVERBUGET BY: " << RTT - 15 << "ms\n";
+			}
+			counter = 0;
+		}
+		else
+		{
+			counter++;
+		}
+
+		
+
 	}
 
 	free(sendingBuffer);
@@ -91,7 +106,7 @@ int main()
 	signal(SIGINT, sigint_handler);
 
 	//FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
-	FrameSender* frameSender = new FrameSender("192.168.1.100", 1337, 1338);
+	FrameSender* frameSender = new FrameSender("192.168.1.106", 1337, 1338);
 	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (wronghousefool)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 
 	std::thread handler(VideoHandler, ndiManager, frameSender);

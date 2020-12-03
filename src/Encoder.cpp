@@ -41,8 +41,8 @@ Encoder::Encoder(EncoderSettings settings)
 	av_opt_set(codecContext->priv_data, "tier", "high", 0);
 	av_opt_set(codecContext->priv_data, "spatial_aq", "1", 0);
 	
-	av_opt_set(codecContext->priv_data, "rc", "constqp", 0);
-	av_opt_set(codecContext->priv_data, "qp", "30", 0);
+	//av_opt_set(codecContext->priv_data, "rc", "constqp", 0);
+	//av_opt_set(codecContext->priv_data, "qp", "30", 0);
 
 	if (avcodec_open2(codecContext, codec, NULL) < 0)
 	{
