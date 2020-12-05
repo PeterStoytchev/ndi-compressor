@@ -19,7 +19,7 @@ NOTE 2: This is, and always will be (or at least until NewTek release a cross-pl
 7. Run the compressor.
 
 # How to use/configure
-You edit the values in the config.yaml file (which should be called that and sit next to the .exe, but you can specify a path as a CLI arugment). Most of them are self-explenirary, but I will focus on a few important ones.
+You edit the values in the config.yaml file (which should be called that and sit next to the .exe, but you can specify a path as a CLI arugment). Most of them are self-explanatory, but I will focus on a few important ones.
 
 encoderName: The name of the ffmpeg encoder you want to use. It supports most of them, but if it doesn't have it, recompile ffmpeg with the codecs you need, replace the files in the vendor/lib directory and recompile the program.
 
