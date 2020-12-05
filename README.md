@@ -25,7 +25,7 @@ encoderName: The name of the ffmpeg encoder you want to use. It supports most of
 
 thread_count: This doesn't really do anything for encoders like NVENC, for others, it may have diffirent effects. Again, this is quite encoder dependent.
 
-priv_data: This sets additional options for the encoder. This is very encoder dependent, so look them up for the encoder you use (ffmpeg -hide_banner -h encoder=<encoder name goes here>). Make sure to keep the spacing for the options the same, because it has to be parsed into a YAML map. Notepad++ handles the spacing automatically when you hit enter to go to a new line.
+priv_data: This sets additional options for the encoder. This is very encoder dependent, so look them up for the encoder you use (ffmpeg -hide_banner -h encoder=[encoder name goes here]). Make sure to keep the spacing for the options the same, because it has to be parsed into a YAML map. Notepad++ handles the spacing automatically when you hit enter to go to a new line.
 
 # TODO
 1. Profiling support.
