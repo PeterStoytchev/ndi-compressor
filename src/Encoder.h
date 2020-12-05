@@ -40,9 +40,16 @@ struct EncoderSettings
 
 	EncoderSettings(const EncoderSettings& settings) //this is here just to ensure that the priv data is copied right
 	{
+		ipDest = settings.ipDest;
+
 		encoderName = settings.encoderName;
 
+		ndiSrcName = settings.ndiSrcName;
+
 		bitrateMbps = settings.bitrateMbps;
+
+		videoPort = settings.videoPort;
+		audioPort = settings.audioPort;
 
 		pix_fmt = settings.pix_fmt;
 		
@@ -63,12 +70,19 @@ struct EncoderSettings
 	{
 		YAML::Node config = YAML::LoadFile(path);
 
+		ipDest = config["ipDest"].as<std::string>();
+
 		encoderName = config["encoderName"].as<std::string>();
+
+		ndiSrcName = config["ndiSrcName"].as<std::string>();
 
 		bitrateMbps = config["bitrateMbps"].as<int64_t>();
 
 		gop_size = config["gop_size"].as<int>();
 		max_b_frames = config["max_b_frames"].as<int>();
+
+		videoPort = config["videoPort"].as<int>();
+		audioPort = config["audioPort"].as<int>();
 
 		xres = config["xres"].as<int>();
 		yres = config["yres"].as<int>();
@@ -83,21 +97,15 @@ struct EncoderSettings
 		}
 	}
 
-	std::string encoderName = "h264_nvenc";
-	int64_t bitrateMbps;
-
-	AVPixelFormat pix_fmt = AV_PIX_FMT_NV12;
-	int gop_size = 60;
-	int max_b_frames = 0;
-
-	int xres = 1920;
-	int yres = 1080;
-
-	int fps = 60;
-
-	int thread_count = 0;
-
+	std::string ipDest;
+	std::string ndiSrcName;
+	std::string encoderName;
 	std::unordered_map<std::string, std::string> priv_data;
+
+	int64_t bitrateMbps;
+	AVPixelFormat pix_fmt = AV_PIX_FMT_NV12;
+	
+	int videoPort, audioPort, thread_count, xres, yres, fps, gop_size, max_b_frames;
 };
 
 class Encoder

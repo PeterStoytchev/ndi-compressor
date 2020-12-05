@@ -13,11 +13,10 @@ static void sigint_handler(int)
 }
 
 
-void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender)
+//refactor this
+void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSettings encSettings)
 {
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
-	
-	EncoderSettings encSettings("config.yaml");
 
 	Encoder encoder(encSettings);
 
@@ -102,11 +101,12 @@ int main()
 {
 	signal(SIGINT, sigint_handler);
 
-	//FrameSender* frameSender = new FrameSender("10.6.0.3", 1337, 1338);
-	FrameSender* frameSender = new FrameSender("192.168.1.106", 1337, 1338);
-	NdiManager* ndiManager = new NdiManager("DESKTOP-G0O595D (wronghousefool)", nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
+	EncoderSettings encSettings("config.yaml");
 
-	std::thread handler(VideoHandler, ndiManager, frameSender);
+	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
+	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
+
+	std::thread handler(VideoHandler, ndiManager, frameSender, encSettings);
 	AudioHandler(ndiManager, frameSender);
 
 	handler.join();
