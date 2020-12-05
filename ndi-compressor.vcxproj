@@ -176,6 +176,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="config.yaml" />
     <None Include="LICENSE" />
     <None Include="README.md" />
   </ItemGroup>

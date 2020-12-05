@@ -97,11 +97,19 @@ void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
-	signal(SIGINT, sigint_handler);
+	EncoderSettings encSettings;
+	if (argc < 2)
+	{
+		encSettings = EncoderSettings("config.yaml");
+	}
+	else
+	{
+		encSettings = EncoderSettings(argv[1]);
+	}
 
-	EncoderSettings encSettings("config.yaml");
+	signal(SIGINT, sigint_handler);
 
 	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
