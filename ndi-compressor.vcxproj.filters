@@ -44,5 +44,8 @@
     <ClInclude Include="src\FrameSender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vendor\include\Instrumentor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

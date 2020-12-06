@@ -6,6 +6,8 @@
 #include "NdiManager.h"
 #include "FrameSender.h"
 
+#include "Instrumentor.h"
+
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
 {
@@ -22,18 +24,25 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 
 	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 2);
 	 
-	int counter = 0;
-	int diviser = 7;
-	std::chrono::time_point<std::chrono::steady_clock> startPoint;
-
+	unsigned long long frameCounter = 0;
 	while (!exit_loop)
 	{
-		if (counter % diviser == 0)
-			startPoint = std::chrono::high_resolution_clock::now();
+		InstrumentationTimer timer("VideoHandler");
 
-		NDIlib_video_frame_v2_t* video_frame = ndiManager->CaptureVideoFrame();
+		NDIlib_video_frame_v2_t* video_frame;
+		{
+			InstrumentationTimer timer("CaptureVideoFrame");
+			video_frame = ndiManager->CaptureVideoFrame();
+		}
 		
-		auto [dataSize, data] = encoder.Encode(video_frame);
+		size_t dataSize;
+		uint8_t* data;
+		{
+			InstrumentationTimer timer("EncodeFrame");
+			auto tuple = encoder.Encode(video_frame);
+			dataSize = std::get<0>(tuple);
+			data = std::get<1>(tuple);
+		}
 
 		if (dataSize != 0)
 		{
@@ -42,9 +51,15 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 
 			frame.videoFrame = *video_frame;
 
-			frameSender->WaitForConfirmation();
+			{
+				InstrumentationTimer timer("WaitForConfirmation");
+				frameSender->WaitForConfirmation();
+			}
 
-			frameSender->SendVideoFrame(frame, data);
+			{
+				InstrumentationTimer timer("SendVideoFrame");
+				frameSender->SendVideoFrame(frame, data);
+			}
 		}
 		else
 		{
@@ -57,28 +72,20 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 			
 			frame.videoFrame = bsFrame;
 
-			frameSender->WaitForConfirmation();
+			{
+				InstrumentationTimer timer("WaitForConfirmation");
+				frameSender->WaitForConfirmation();
+			}
 
-			frameSender->SendVideoFrame(frame, bsBuffer);
-			ndiManager->FreeVideo(&bsFrame);
+			{
+				InstrumentationTimer timer("SendVideoFrame");
+				frameSender->SendVideoFrame(frame, bsBuffer);
+				ndiManager->FreeVideo(&bsFrame);
+			}
 		}
 
 		ndiManager->FreeVideo(video_frame);
-
-		if (counter % diviser == 0)
-		{
-			long long RTT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startPoint).count();
-			
-			if (RTT > 15)
-			{
-				std::cout << "RTT OVERBUGET BY: " << RTT - 15 << "ms\n";
-			}
-			counter = 0;
-		}
-		else
-		{
-			counter++;
-		}
+		frameCounter++;
 	}
 
 	free(sendingBuffer);
@@ -114,6 +121,8 @@ int main(int argc, char** argv)
 	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 
+	Instrumentor::Get().BeginSession("ndi-compressor");
+
 	std::thread handler(VideoHandler, ndiManager, frameSender, encSettings);
 	AudioHandler(ndiManager, frameSender);
 
@@ -121,4 +130,5 @@ int main(int argc, char** argv)
 
 	delete ndiManager;
 	delete frameSender;
+	Instrumentor::Get().EndSession();
 }

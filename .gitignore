@@ -6,6 +6,8 @@
 bin/
 bin-inter/
 
+*.json
+
 # User-specific files
 *.rsuser
 *.suo

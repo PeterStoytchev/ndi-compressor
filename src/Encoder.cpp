@@ -1,6 +1,7 @@
 #include "Encoder.h"
 
 #include <assert.h>
+#include "Instrumentor.h"
 
 Encoder::Encoder(EncoderSettings settings)
 {
@@ -52,39 +53,49 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
 	ret = av_frame_make_writable(frame);
 
-	uint8_t* data[1] = { ndi_frame->p_data };
-	int linesize[1] = { m_settings.xres * 2 };
+	{
+		InstrumentationTimer timer("sws_scale");
 
-	uint8_t* outData[2] = { frame->data[0], frame->data[1]};
-	int outLinesize[2] = { m_settings.xres, m_settings.xres};
+		uint8_t* data[1] = { ndi_frame->p_data };
+		int linesize[1] = { m_settings.xres * 2 };
 
-	sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
+		uint8_t* outData[2] = { frame->data[0], frame->data[1] };
+		int outLinesize[2] = { m_settings.xres, m_settings.xres };
 
+		sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
+	}
+	
 	frame->pts = i;
 
-	if ((ret = avcodec_send_frame(codecContext, frame)) < 0)
 	{
-		LOG_ERR(ret);
+		InstrumentationTimer timer("avcodec_send_frame");
+		if ((ret = avcodec_send_frame(codecContext, frame)) < 0)
+		{
+			LOG_ERR(ret);
 
-		printf("Could not send_frame!\n");
-		assert(0);
+			printf("Could not send_frame!\n");
+			assert(0);
+		}
 	}
 
-	ret = avcodec_receive_packet(codecContext, pkt);
-	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 	{
-		printf("Buffering frame... send empty!\n");
-		return std::make_tuple(0, nullptr);
-	}
-	else if (ret < 0)
-	{
-		LOG_ERR(ret);
+		InstrumentationTimer timer("avcodec_receive_packet");
+		ret = avcodec_receive_packet(codecContext, pkt);
+		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+		{
+			printf("Buffering frame... send empty!\n");
+			return std::make_tuple(0, nullptr);
+		}
+		else if (ret < 0)
+		{
+			LOG_ERR(ret);
 
-		printf("Could not receive_packet!\n");
-		assert(0);
-	}
+			printf("Could not receive_packet!\n");
+			assert(0);
+		}
 
-	i++;
+		i++;
+	}
 
 	return std::make_tuple(pkt->size, pkt->data);
 }
