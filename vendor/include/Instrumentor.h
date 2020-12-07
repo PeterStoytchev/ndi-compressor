@@ -133,3 +133,17 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> m_StartTimepoint;
     bool m_Stopped;
 };
+
+#define _PROFILE
+
+#ifdef _PROFILE
+#define PROFILE(x) InstrumentationTimer timer(x)
+#define SCOPED_PROFILE(x, ...) {  InstrumentationTimer timer(x);  __VA_ARGS__ }
+#define CREATE_PROFILER(x) Instrumentor::Get().BeginSession(x)
+#define DESTROY_PROFILER() Instrumentor::Get().EndSession()
+#else
+#define PROFILE(x)
+#define SCOPED_PROFILE(x, ...)
+#define CREATE_PROFILER(x)
+#define DESTROY_PROFILER()
+#endif

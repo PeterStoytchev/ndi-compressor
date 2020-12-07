@@ -53,9 +53,7 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
 	ret = av_frame_make_writable(frame);
 
-	{
-		InstrumentationTimer timer("sws_scale");
-
+	SCOPED_PROFILE("sws_scale", 
 		uint8_t* data[1] = { ndi_frame->p_data };
 		int linesize[1] = { m_settings.xres * 2 };
 
@@ -63,12 +61,11 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 		int outLinesize[2] = { m_settings.xres, m_settings.xres };
 
 		sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
-	}
 	
-	frame->pts = i;
+		frame->pts = i;
+	)
 
-	{
-		InstrumentationTimer timer("avcodec_send_frame");
+	SCOPED_PROFILE("avcodec_send_frame", 
 		if ((ret = avcodec_send_frame(codecContext, frame)) < 0)
 		{
 			LOG_ERR(ret);
@@ -76,10 +73,9 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 			printf("Could not send_frame!\n");
 			assert(0);
 		}
-	}
+	)
 
-	{
-		InstrumentationTimer timer("avcodec_receive_packet");
+	SCOPED_PROFILE("avcodec_receive_packet", 
 		ret = avcodec_receive_packet(codecContext, pkt);
 		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 		{
@@ -95,7 +91,7 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 		}
 
 		i++;
-	}
+	)
 
 	return std::make_tuple(pkt->size, pkt->data);
 }

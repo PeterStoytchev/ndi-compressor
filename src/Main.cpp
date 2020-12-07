@@ -8,6 +8,8 @@
 
 #include "Instrumentor.h"
 
+
+
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
 {
@@ -27,22 +29,20 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 	unsigned long long frameCounter = 0;
 	while (!exit_loop)
 	{
-		InstrumentationTimer timer("VideoHandler");
+		PROFILE("VideoHandler");
 
 		NDIlib_video_frame_v2_t* video_frame;
-		{
-			InstrumentationTimer timer("CaptureVideoFrame");
-			video_frame = ndiManager->CaptureVideoFrame();
-		}
-		
+
+		SCOPED_PROFILE("CaptureVideoFrame", video_frame = ndiManager->CaptureVideoFrame();)
+
 		size_t dataSize;
 		uint8_t* data;
-		{
-			InstrumentationTimer timer("EncodeFrame");
+		
+		SCOPED_PROFILE("EncodeFrame",
 			auto tuple = encoder.Encode(video_frame);
 			dataSize = std::get<0>(tuple);
 			data = std::get<1>(tuple);
-		}
+		)
 
 		if (dataSize != 0)
 		{
@@ -51,15 +51,8 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 
 			frame.videoFrame = *video_frame;
 
-			{
-				InstrumentationTimer timer("WaitForConfirmation");
-				frameSender->WaitForConfirmation();
-			}
-
-			{
-				InstrumentationTimer timer("SendVideoFrame");
-				frameSender->SendVideoFrame(frame, data);
-			}
+			SCOPED_PROFILE("WaitForConfirmation", frameSender->WaitForConfirmation();)
+			SCOPED_PROFILE("SendVideoFrame", frameSender->SendVideoFrame(frame, data);)
 		}
 		else
 		{
@@ -72,16 +65,12 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 			
 			frame.videoFrame = bsFrame;
 
-			{
-				InstrumentationTimer timer("WaitForConfirmation");
-				frameSender->WaitForConfirmation();
-			}
+			SCOPED_PROFILE("WaitForConfirmation", frameSender->WaitForConfirmation();)
 
-			{
-				InstrumentationTimer timer("SendVideoFrame");
+			SCOPED_PROFILE("SendVideoFrame", 
 				frameSender->SendVideoFrame(frame, bsBuffer);
 				ndiManager->FreeVideo(&bsFrame);
-			}
+			)
 		}
 
 		ndiManager->FreeVideo(video_frame);
@@ -95,11 +84,15 @@ void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	while (!exit_loop)
 	{
-		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
+		PROFILE("AudioHandler");
+		NDIlib_audio_frame_v2_t* audio_frame;
+		
+		SCOPED_PROFILE("CaptureAudioFrame", audio_frame = ndiManager->CaptureAudioFrame();)
 
-		frameSender->SendAudioFrame(audio_frame);
-
-		ndiManager->FreeAudio(audio_frame);
+		SCOPED_PROFILE("SendAudioFrame", 
+			frameSender->SendAudioFrame(audio_frame);
+			ndiManager->FreeAudio(audio_frame);
+		)
 	}
 }
 
@@ -121,7 +114,7 @@ int main(int argc, char** argv)
 	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
 
-	Instrumentor::Get().BeginSession("ndi-compressor");
+	CREATE_PROFILER("ndi-compressor");
 
 	std::thread handler(VideoHandler, ndiManager, frameSender, encSettings);
 	AudioHandler(ndiManager, frameSender);
@@ -130,5 +123,5 @@ int main(int argc, char** argv)
 
 	delete ndiManager;
 	delete frameSender;
-	Instrumentor::Get().EndSession();
+	DESTROY_PROFILER();
 }
