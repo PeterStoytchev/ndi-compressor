@@ -57,8 +57,8 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 		uint8_t* data[1] = { ndi_frame->p_data };
 		int linesize[1] = { m_settings.xres * 2 };
 
-		uint8_t* outData[2] = { frame->data[0], frame->data[1] };
-		int outLinesize[2] = { m_settings.xres, m_settings.xres };
+		uint8_t* outData[3] = { frame->data[0], frame->data[1], frame->data[2] };
+		int outLinesize[3] = { m_settings.xres, m_settings.xres / 2, m_settings.xres / 2 };
 
 		sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
 	

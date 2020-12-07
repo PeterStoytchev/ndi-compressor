@@ -6,9 +6,8 @@
 #include "NdiManager.h"
 #include "FrameSender.h"
 
+
 #include "Instrumentor.h"
-
-
 
 static std::atomic<bool> exit_loop(false);
 static void sigint_handler(int)
@@ -26,7 +25,6 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 
 	uint8_t* sendingBuffer = (uint8_t*)malloc(encSettings.xres * encSettings.yres * 2);
 	 
-	unsigned long long frameCounter = 0;
 	while (!exit_loop)
 	{
 		PROFILE("VideoHandler");
@@ -74,25 +72,23 @@ void VideoHandler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSetti
 		}
 
 		ndiManager->FreeVideo(video_frame);
-		frameCounter++;
 	}
 
 	free(sendingBuffer);
+
 }
 
 void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	while (!exit_loop)
 	{
-		PROFILE("AudioHandler");
 		NDIlib_audio_frame_v2_t* audio_frame;
-		
-		SCOPED_PROFILE("CaptureAudioFrame", audio_frame = ndiManager->CaptureAudioFrame();)
 
-		SCOPED_PROFILE("SendAudioFrame", 
-			frameSender->SendAudioFrame(audio_frame);
-			ndiManager->FreeAudio(audio_frame);
-		)
+		audio_frame = ndiManager->CaptureAudioFrame();
+
+		frameSender->SendAudioFrame(audio_frame);
+
+		ndiManager->FreeAudio(audio_frame);
 	}
 }
 
@@ -113,12 +109,11 @@ int main(int argc, char** argv)
 
 	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr); //create on the heap in order to avoid problems when accessing this from more than one thread
-
+	
 	CREATE_PROFILER("ndi-compressor");
-
+	
 	std::thread handler(VideoHandler, ndiManager, frameSender, encSettings);
 	AudioHandler(ndiManager, frameSender);
-
 	handler.join();
 
 	delete ndiManager;

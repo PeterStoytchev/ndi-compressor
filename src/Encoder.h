@@ -103,7 +103,7 @@ struct EncoderSettings
 	std::unordered_map<std::string, std::string> priv_data;
 
 	int64_t bitrateMbps;
-	AVPixelFormat pix_fmt = AV_PIX_FMT_NV12;
+	AVPixelFormat pix_fmt = AV_PIX_FMT_YUV420P;
 	
 	int videoPort, audioPort, thread_count, xres, yres, fps, gop_size, max_b_frames;
 };
