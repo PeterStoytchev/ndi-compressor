@@ -138,8 +138,6 @@ private:
     bool m_Stopped;
 };
 
-#define _PROFILE
-
 #ifdef _PROFILE
 #define PROFILE(x) InstrumentationTimer timer(x)
 #define SCOPED_PROFILE(x, ...) {  InstrumentationTimer timer(x);  __VA_ARGS__ }
