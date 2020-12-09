@@ -182,12 +182,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\FrameSender.cpp" />
+    <ClCompile Include="src\FrameWrangler.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\NdiManager.cpp" />
     <ClCompile Include="src\Encoder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Frame.h" />
     <ClInclude Include="src\FrameSender.h" />
+    <ClInclude Include="src\FrameWrangler.h" />
     <ClInclude Include="src\NdiManager.h" />
     <ClInclude Include="src\Encoder.h" />
     <ClInclude Include="vendor\include\Instrumentor.h" />
