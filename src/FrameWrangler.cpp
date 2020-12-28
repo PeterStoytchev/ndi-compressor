@@ -43,49 +43,8 @@ void FrameWrangler::HandleNdi()
 
 		std::lock_guard<std::mutex> guard(m_ndiMutex);
 		m_ndiQueue.push(frame);
-		printf("DEBUG: Ndi queue size +1. Current size: %u\n", m_ndiQueue.size());
-	}
-}
 
-void FrameWrangler::HandleSending()
-{
-	while (!m_exit)
-	{
-		m_encodingMutex.lock();
-		if (!m_encodingQueue.empty())
-		{
-			auto frame = m_encodingQueue.front();
-			m_encodingQueue.pop();
-
-			m_encodingMutex.unlock();
-
-			if (frame.dataSize != 0)
-			{
-				m_frameSender->SendVideoFrame(frame, frame.data);
-			}
-			else
-			{
-				NDIlib_video_frame_v2_t bsFrame = NDIlib_video_frame_v2_t(1, 1);
-				bsFrame.timecode = frame.videoFrame.timecode;
-				bsFrame.timestamp = frame.videoFrame.timestamp;
-
-				frame.dataSize = 1;
-				frame.videoFrame = bsFrame;
-				frame.data = bsBuffer;
-
-				m_frameSender->SendVideoFrame(frame, frame.data);
-			}
-
-			m_ndiManager->FreeVideo(&frame.videoFrame);
-			free(frame.data);
-
-			printf("DEBUG: Encoding queue size: %u\n", m_encodingQueue.size());
-			m_frameSender->WaitForConfirmation();
-		}
-		else
-		{
-			m_encodingMutex.unlock();
-		}
+		printf("DEBUG: Ndi queue size : %u\n", m_ndiQueue.size());
 	}
 }
 
@@ -103,16 +62,51 @@ void FrameWrangler::HandleEncoding()
 
 			auto [dataSize, data] = m_encoder->Encode(video_frame);
 
-			VideoFrame frame(dataSize, data, video_frame);
+			if (data != 0)
+			{
+				VideoFrame frame(dataSize, data, video_frame);
 
-			std::lock_guard<std::mutex> guard(m_encodingMutex);
-			m_encodingQueue.push(frame);
+				std::lock_guard<std::mutex> guard(m_encodingMutex);
+				m_encodingQueue.push(frame);
 
-			printf("DEBUG: Ndi queue size -1. Encoding current size: %u\n", m_encodingQueue.size());
+				printf("DEBUG: Encoding queue size: %u\n", m_encodingQueue.size());
+			}
+			else
+			{
+				m_ndiManager->FreeVideo(video_frame);
+			}
 		}
 		else
 		{
 			m_ndiMutex.unlock();
+		}
+
+	}
+}
+
+void FrameWrangler::HandleSending()
+{
+	while (!m_exit)
+	{
+		m_encodingMutex.lock();
+		if (!m_encodingQueue.empty())
+		{
+			auto video_frame = m_encodingQueue.front();
+			m_encodingQueue.pop();
+
+			m_encodingMutex.unlock();
+
+			m_frameSender->SendVideoFrame(video_frame, video_frame.data);
+
+			m_ndiManager->FreeVideo(&video_frame.videoFrame);
+			free(video_frame.data);
+
+			printf("Sent frame %u\n", video_frame.id);
+
+		}
+		else
+		{
+			m_encodingMutex.unlock();
 		}
 	}
 }

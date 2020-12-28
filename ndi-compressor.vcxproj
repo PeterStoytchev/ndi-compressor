@@ -193,7 +193,6 @@
     <ClInclude Include="src\FrameWrangler.h" />
     <ClInclude Include="src\NdiManager.h" />
     <ClInclude Include="src\Encoder.h" />
-    <ClInclude Include="vendor\include\Instrumentor.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

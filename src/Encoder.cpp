@@ -1,7 +1,6 @@
 #include "Encoder.h"
 
 #include <assert.h>
-#include "Instrumentor.h"
 
 Encoder::Encoder(EncoderSettings settings)
 {
@@ -53,45 +52,39 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
 	ret = av_frame_make_writable(frame);
 
-	SCOPED_PROFILE("sws_scale", 
-		uint8_t* data[1] = { ndi_frame->p_data };
-		int linesize[1] = { m_settings.xres * 2 };
+	uint8_t* data[1] = { ndi_frame->p_data };
+	int linesize[1] = { m_settings.xres * 2 };
 
-		uint8_t* outData[3] = { frame->data[0], frame->data[1], frame->data[2] };
-		int outLinesize[3] = { m_settings.xres, m_settings.xres / 2, m_settings.xres / 2 };
+	uint8_t* outData[3] = { frame->data[0], frame->data[1], frame->data[2] };
+	int outLinesize[3] = { m_settings.xres, m_settings.xres / 2, m_settings.xres / 2 };
 
-		sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
-	
-		frame->pts = i;
-	)
+	sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
 
-	SCOPED_PROFILE("avcodec_send_frame", 
-		if ((ret = avcodec_send_frame(codecContext, frame)) < 0)
-		{
-			LOG_ERR(ret);
+	frame->pts = i;
 
-			printf("Could not send_frame!\n");
-			assert(0);
-		}
-	)
+	if ((ret = avcodec_send_frame(codecContext, frame)) < 0)
+	{
+		LOG_ERR(ret);
 
-	SCOPED_PROFILE("avcodec_receive_packet", 
-		ret = avcodec_receive_packet(codecContext, pkt);
-		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-		{
-			printf("Buffering frame... send empty!\n");
-			return std::make_tuple(0, nullptr);
-		}
-		else if (ret < 0)
-		{
-			LOG_ERR(ret);
+		printf("Could not send_frame!\n");
+		assert(0);
+	}
 
-			printf("Could not receive_packet!\n");
-			assert(0);
-		}
+	ret = avcodec_receive_packet(codecContext, pkt);
+	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+	{
+		printf("Buffering frame... send empty!\n");
+		return std::make_tuple(0, nullptr);
+	}
+	else if (ret < 0)
+	{
+		LOG_ERR(ret);
 
-		i++;
-	)
+		printf("Could not receive_packet!\n");
+		assert(0);
+	}
+
+	i++;
 
 	return std::make_tuple(pkt->size, pkt->data);
 }

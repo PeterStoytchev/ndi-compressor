@@ -8,8 +8,6 @@
 
 #include "FrameWrangler.h"
 
-#include "Instrumentor.h"
-
 FrameWrangler* wrangler;
 
 static std::atomic<bool> exit_loop(false);
@@ -23,9 +21,7 @@ void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
 	while (!exit_loop)
 	{
-		NDIlib_audio_frame_v2_t* audio_frame;
-
-		audio_frame = ndiManager->CaptureAudioFrame();
+		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
 
 		frameSender->SendAudioFrame(audio_frame);
 
@@ -52,12 +48,10 @@ int main(int argc, char** argv)
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr);
 	wrangler = new FrameWrangler(ndiManager, frameSender, encSettings);
 	
-	CREATE_PROFILER("ndi-compressor");
 	
 	AudioHandler(ndiManager, frameSender);
 
 	delete wrangler;
 	delete ndiManager;
 	delete frameSender;
-	DESTROY_PROFILER();
 }
