@@ -30,14 +30,14 @@ FrameSender::~FrameSender()
 }
 
 
-void FrameSender::SendVideoFrame(VideoFrame frame, uint8_t* data)
+void FrameSender::SendVideoFrame(VideoFrame* frame)
 {
-	if (m_videoConn.write_n(&frame, sizeof(frame)) != sizeof(frame))
+	if (m_videoConn.write_n(frame, sizeof(VideoFrame)) != sizeof(VideoFrame))
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	if (m_videoConn.write_n(data, frame.dataSize) != frame.dataSize)
+	if (m_videoConn.write_n(frame->encodedDataPacket->data, frame->encodedDataPacket->size) != frame->encodedDataPacket->size)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}

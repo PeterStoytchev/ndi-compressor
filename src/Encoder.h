@@ -113,7 +113,7 @@ class Encoder
 public:
 	Encoder(EncoderSettings settings);
 	
-	std::tuple<size_t, uint8_t*> Encode(NDIlib_video_frame_v2_t* frame);
+	AVPacket* Encode(NDIlib_video_frame_v2_t* frame);
 private:
 	EncoderSettings m_settings;
 	int ret, i;
@@ -122,7 +122,6 @@ private:
 	AVCodecContext * codecContext = NULL;
 	
 	AVFrame* frame;
-	AVPacket* pkt;
 	
 	struct SwsContext* swsContext = NULL;
 

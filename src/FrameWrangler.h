@@ -7,8 +7,8 @@
 
 #include "Processing.NDI.Lib.h"
 
-#include "Frame.h"
 #include "Encoder.h"
+#include "Frame.h"
 #include "NdiManager.h"
 #include "FrameSender.h"
 
@@ -24,7 +24,6 @@ public:
 	void HandleSending();
 	void HandleEncoding();
 
-
 private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;
@@ -34,8 +33,8 @@ private:
 	std::thread sendingHandler;
 	std::thread encodingHandler;
 	
+	std::queue<VideoFrame> m_ndiQueue;
 	std::queue<VideoFrame> m_encodingQueue;
-	std::queue<NDIlib_video_frame_v2_t*> m_ndiQueue;
 
 	std::mutex m_ndiMutex;
 	std::mutex m_encodingMutex;
@@ -43,4 +42,6 @@ private:
 	std::atomic<bool> m_exit = false;
 
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
+
+	uint64_t lastid = 0;
 };

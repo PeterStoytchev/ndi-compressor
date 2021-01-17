@@ -9,7 +9,6 @@ Encoder::Encoder(EncoderSettings settings)
     m_settings = settings;
 
 	frame = av_frame_alloc();
-	pkt = av_packet_alloc();
 
 	codec = avcodec_find_encoder_by_name(settings.encoderName.c_str());
 	
@@ -23,9 +22,11 @@ Encoder::Encoder(EncoderSettings settings)
 	codecContext->pix_fmt = m_settings.pix_fmt;
 	codecContext->max_b_frames = m_settings.max_b_frames;
 
-	codecContext->slices = settings.thread_count;
-	codecContext->thread_count = settings.thread_count;
-
+	if (settings.thread_count != 1)
+	{
+		codecContext->slices = settings.thread_count;
+		codecContext->thread_count = settings.thread_count;
+	}
 
 	swsContext = sws_getContext(m_settings.xres, m_settings.yres, AV_PIX_FMT_UYVY422, m_settings.xres, m_settings.yres, m_settings.pix_fmt, SWS_POINT | SWS_BITEXACT, 0, 0, 0);
 
@@ -48,7 +49,7 @@ Encoder::Encoder(EncoderSettings settings)
 	ret = av_frame_get_buffer(frame, 0);
 }
 
-std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
+AVPacket* Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
 	ret = av_frame_make_writable(frame);
 
@@ -70,11 +71,13 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 		assert(0);
 	}
 
+	AVPacket* pkt = av_packet_alloc();
 	ret = avcodec_receive_packet(codecContext, pkt);
 	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 	{
 		printf("Buffering frame... send empty!\n");
-		return std::make_tuple(0, nullptr);
+		av_packet_free(&pkt);
+		return nullptr;
 	}
 	else if (ret < 0)
 	{
@@ -86,6 +89,6 @@ std::tuple<size_t, uint8_t*> Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 
 	i++;
 
-	return std::make_tuple(pkt->size, pkt->data);
+	return pkt;
 }
 
