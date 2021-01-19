@@ -1,6 +1,5 @@
 #include "Encoder.h"
-
-#include "optik/optick.h"
+#include "Profiler.h"
 
 #include <assert.h>
 
@@ -53,7 +52,8 @@ Encoder::Encoder(EncoderSettings settings)
 
 AVPacket* Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
-	OPTICK_EVENT();
+	PROFILE_FUNC();
+
 	ret = av_frame_make_writable(frame);
 
 	uint8_t* data[1] = { ndi_frame->p_data };

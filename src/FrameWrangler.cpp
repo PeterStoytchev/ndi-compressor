@@ -1,5 +1,5 @@
 #include "FrameWrangler.h"
-#include "optik/optick.h"
+#include "Profiler.h"
 
 FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSettings encSettings)
 {
@@ -28,7 +28,7 @@ void FrameWrangler::Main()
 {
 	while (!m_exit)
 	{
-		OPTICK_FRAME("MainLoop");
+		PROFILE_FRAME("MainLoop");
 
 		if (m_LastFrameGood)
 			m_frameSender->WaitForConfirmation();

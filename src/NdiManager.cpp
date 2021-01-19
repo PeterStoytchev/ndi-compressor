@@ -1,5 +1,5 @@
 #include "NdiManager.h"
-#include "optik/optick.h"
+#include "Profiler.h"
 
 NdiManager::NdiManager(const char* srcName, const char* dstName)
 {
@@ -80,7 +80,7 @@ void NdiManager::SendAndFreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
 
 NDIlib_video_frame_v2_t* NdiManager::CaptureVideoFrame()
 {
-	OPTICK_EVENT();
+	PROFILE_FUNC();
 	NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
 
 	NDIlib_recv_capture_v2(m_recvInstance, video_frame, nullptr, nullptr, 5000);

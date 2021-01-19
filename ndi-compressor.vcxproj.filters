@@ -128,5 +128,8 @@
     <ClInclude Include="src\optik\optick_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Profiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
