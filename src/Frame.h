@@ -7,7 +7,6 @@ struct VideoFrame
 	size_t encodedDataSize = 0;
 	AVPacket* encodedDataPacket;
 	NDIlib_video_frame_v2_t videoFrame;
-	uint64_t id = rand();
 };
 
 struct AudioFrame

@@ -1,4 +1,5 @@
 #include "FrameWrangler.h"
+#include "optik/optick.h"
 
 FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, EncoderSettings encSettings)
 {
@@ -7,27 +8,15 @@ FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, E
 	this->m_ndiManager = ndiManager;
 	this->m_frameSender = frameSender;
 
-	ndiHandler = std::thread([this] {
-		HandleNdi();
+	mainHandler = std::thread([this] {
+		Main();
 	});
-	ndiHandler.detach();
-
-	encodingHandler = std::thread([this] {
-		HandleEncoding();
-	});
-	encodingHandler.detach();
-
-	sendingHandler = std::thread([this] {
-		HandleSending();
-	});
-	sendingHandler.detach();
+	mainHandler.detach();
 }
 
 FrameWrangler::~FrameWrangler()
 {
-	ndiHandler.join();
-	sendingHandler.join();
-	encodingHandler.join();
+	mainHandler.join();
 }
 
 void FrameWrangler::Stop()
@@ -35,61 +24,23 @@ void FrameWrangler::Stop()
 	m_exit = true;
 }
 
-void FrameWrangler::HandleNdi()
+void FrameWrangler::Main()
 {
 	while (!m_exit)
 	{
-		VideoFrame vframe;
-		vframe.videoFrame = *m_ndiManager->CaptureVideoFrame();
+		OPTICK_FRAME("MainLoop");
 
-		std::lock_guard<std::mutex> guard(m_ndiMutex);
-		m_ndiQueue.push(vframe);
-	}
-}
+		if (m_LastFrameGood)
+			m_frameSender->WaitForConfirmation();
 
-void FrameWrangler::HandleEncoding()
-{
-	while (!m_exit)
-	{
-		m_ndiMutex.lock();
-		if (!m_ndiQueue.empty())
+		VideoFrame video_frame;
+		video_frame.videoFrame = *m_ndiManager->CaptureVideoFrame();
+
+		video_frame.encodedDataPacket = m_encoder->Encode(&video_frame.videoFrame);
+
+		if (video_frame.encodedDataPacket != nullptr && video_frame.encodedDataPacket->size != 0)
 		{
-			auto video_frame = m_ndiQueue.front();
-			
-			m_ndiQueue.pop();
-			m_ndiMutex.unlock();
-
-			video_frame.encodedDataPacket = m_encoder->Encode(&video_frame.videoFrame);
-
-			if (video_frame.encodedDataPacket != nullptr && video_frame.encodedDataPacket->size != 0)
-			{
-				std::lock_guard<std::mutex> guard(m_encodingMutex);
-				m_encodingQueue.push(video_frame);
-			}
-			else
-			{
-				m_ndiManager->FreeVideo(&(video_frame.videoFrame));
-			}
-		}
-		else
-		{
-			m_ndiMutex.unlock();
-		}
-
-	}
-}
-
-void FrameWrangler::HandleSending()
-{
-	while (!m_exit)
-	{
-		m_encodingMutex.lock();
-		if (!m_encodingQueue.empty())
-		{
-			auto video_frame = m_encodingQueue.front();
-			m_encodingQueue.pop();
-
-			m_encodingMutex.unlock();
+			m_LastFrameGood = true;
 
 			video_frame.encodedDataSize = video_frame.encodedDataPacket->size;
 
@@ -100,7 +51,8 @@ void FrameWrangler::HandleSending()
 		}
 		else
 		{
-			m_encodingMutex.unlock();
+			m_ndiManager->FreeVideo(&(video_frame.videoFrame));
+			m_LastFrameGood = false;
 		}
 	}
 }

@@ -20,26 +20,16 @@ public:
 
 	void Stop();
 
-	void HandleNdi();
-	void HandleSending();
-	void HandleEncoding();
-
+	void Main();
 private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 
-	std::thread ndiHandler;
-	std::thread sendingHandler;
-	std::thread encodingHandler;
-	
-	std::queue<VideoFrame> m_ndiQueue;
-	std::queue<VideoFrame> m_encodingQueue;
-
-	std::mutex m_ndiMutex;
-	std::mutex m_encodingMutex;
+	std::thread mainHandler;
 
 	std::atomic<bool> m_exit = false;
+	std::atomic<bool> m_LastFrameGood = true;
 
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 

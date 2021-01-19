@@ -1,4 +1,5 @@
 #include "FrameSender.h"
+#include "optik/optick.h"
 
 FrameSender::FrameSender(const char* host, in_port_t videoPort, in_port_t audioPort)
 {
@@ -32,6 +33,7 @@ FrameSender::~FrameSender()
 
 void FrameSender::SendVideoFrame(VideoFrame* frame)
 {
+	OPTICK_EVENT();
 	if (m_videoConn.write_n(frame, sizeof(VideoFrame)) != sizeof(VideoFrame))
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
@@ -62,6 +64,7 @@ void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 
 void FrameSender::WaitForConfirmation()
 {
+	OPTICK_EVENT();
 	char c = 0;
 	if (m_videoConn.read_n(&c, sizeof(c)) == -1)
 	{
