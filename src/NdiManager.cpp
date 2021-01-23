@@ -1,5 +1,4 @@
 #include "NdiManager.h"
-#include "Profiler.h"
 
 NdiManager::NdiManager(const char* srcName, const char* dstName)
 {
@@ -66,18 +65,6 @@ NdiManager::~NdiManager()
 	NDIlib_destroy();
 }
 
-void NdiManager::SendAndFreeVideo(NDIlib_video_frame_v2_t* p_video_data)
-{
-	SendVideo(p_video_data);
-	FreeVideo(p_video_data);
-}
-
-void NdiManager::SendAndFreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
-{
-	SendAudio(p_audio_data);
-	FreeAudio(p_audio_data);
-}
-
 NDIlib_video_frame_v2_t* NdiManager::CaptureVideoFrame()
 {
 	PROFILE_FUNC();
@@ -90,30 +77,24 @@ NDIlib_video_frame_v2_t* NdiManager::CaptureVideoFrame()
 
 NDIlib_audio_frame_v2_t* NdiManager::CaptureAudioFrame()
 {
+	PROFILE_FUNC();
+
 	NDIlib_audio_frame_v2_t* audio_frame = new NDIlib_audio_frame_v2_t();
-
 	NDIlib_recv_capture_v2(m_recvInstance, nullptr, audio_frame, nullptr, 5000);
-
+	
 	return audio_frame;
 }
 
-void NdiManager::SendVideo(const NDIlib_video_frame_v2_t* p_video_data)
-{
-	NDIlib_send_send_video_v2(m_sendInstance, p_video_data);
-}
-
-void NdiManager::SendAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
-{
-	NDIlib_send_send_audio_v2(m_sendInstance, p_audio_data);
-}
-
-
 void NdiManager::FreeVideo(const NDIlib_video_frame_v2_t* p_video_data)
 {
+	PROFILE_FUNC();
+
 	NDIlib_recv_free_video_v2(m_recvInstance, p_video_data);
 }
 
 void NdiManager::FreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
 {
+	PROFILE_FUNC();
+
 	NDIlib_recv_free_audio_v2(m_recvInstance, p_audio_data);
 }

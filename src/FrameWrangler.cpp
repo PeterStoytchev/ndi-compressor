@@ -40,11 +40,12 @@ void FrameWrangler::Main()
 
 		if (video_frame.encodedDataPacket != nullptr && video_frame.encodedDataPacket->size != 0)
 		{
-			m_LastFrameGood = true;
 
 			video_frame.encodedDataSize = video_frame.encodedDataPacket->size;
 
 			m_frameSender->SendVideoFrame(&video_frame);
+
+			m_LastFrameGood = true;
 
 			m_ndiManager->FreeVideo(&(video_frame.videoFrame));
 			av_packet_free(&(video_frame.encodedDataPacket));

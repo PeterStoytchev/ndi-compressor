@@ -48,6 +48,8 @@ void FrameSender::SendVideoFrame(VideoFrame* frame)
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 {
+	PROFILE_FUNC();
+
 	AudioFrame frame;
 	frame.audioFrame = *ndi_frame;
 	frame.dataSize = sizeof(float) * ndi_frame->no_samples * ndi_frame->no_channels;
@@ -66,6 +68,7 @@ void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 void FrameSender::WaitForConfirmation()
 {
 	PROFILE_FUNC();
+	
 	char c = 0;
 	if (m_videoConn.read_n(&c, sizeof(c)) == -1)
 	{

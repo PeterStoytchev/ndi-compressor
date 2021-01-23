@@ -94,4 +94,3 @@ AVPacket* Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 
 	return pkt;
 }
-

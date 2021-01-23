@@ -19,8 +19,11 @@ static void sigint_handler(int)
 
 void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
+	PROFILE_THREAD("AudioThread");
 	while (!exit_loop)
 	{
+		PROFILE_FUNC();
+
 		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
 
 		frameSender->SendAudioFrame(audio_frame);
@@ -47,7 +50,6 @@ int main(int argc, char** argv)
 	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr);
 	wrangler = new FrameWrangler(ndiManager, frameSender, encSettings);
-	
 	
 	AudioHandler(ndiManager, frameSender);
 

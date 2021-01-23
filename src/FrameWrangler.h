@@ -29,7 +29,7 @@ private:
 	std::thread mainHandler;
 
 	std::atomic<bool> m_exit = false;
-	std::atomic<bool> m_LastFrameGood = true;
+	bool m_LastFrameGood = true;
 
 	uint8_t* bsBuffer = (uint8_t*)malloc(2);
 

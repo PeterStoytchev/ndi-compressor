@@ -7,20 +7,16 @@
 
 #include "Processing.NDI.Lib.h"
 
+#include "Profiler.h"
+
 class NdiManager
 {
 public:
 	NdiManager(const char* srcName, const char* dstName);
 	~NdiManager();
 
-	void SendVideo(const NDIlib_video_frame_v2_t* p_video_data);
-	void SendAudio(const NDIlib_audio_frame_v2_t* p_audio_data);
-
 	void FreeVideo(const NDIlib_video_frame_v2_t* p_video_data);
 	void FreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data);
-
-	void SendAndFreeVideo(NDIlib_video_frame_v2_t* p_video_data);
-	void SendAndFreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data);
 
 	NDIlib_video_frame_v2_t* CaptureVideoFrame();
 	NDIlib_audio_frame_v2_t* CaptureAudioFrame();
