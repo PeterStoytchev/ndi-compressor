@@ -25,13 +25,10 @@ private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
+	
+	VideoPkt video_pkt;
 
 	std::thread mainHandler;
 
 	std::atomic<bool> m_exit = false;
-	bool m_LastFrameGood = true;
-
-	uint8_t* bsBuffer = (uint8_t*)malloc(2);
-
-	uint64_t lastid = 0;
 };

@@ -31,19 +31,31 @@ FrameSender::~FrameSender()
 }
 
 
-void FrameSender::SendVideoFrame(VideoFrame* frame)
+void FrameSender::SendVideoFrame(VideoPkt* frame)
 {
 	PROFILE_FUNC();
 
-	if (m_videoConn.write_n(frame, sizeof(VideoFrame)) != sizeof(VideoFrame))
+	//TODO: make this a global buffer so that we dont have to allocate memory every time
+	uint8_t* frameData = (uint8_t*)malloc(frame->encodedDataSize);
+	
+	size_t localSize = 0;
+	for (int i = 0; i < 30; i++)
+	{
+		memcpy(frameData + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
+		localSize += frame->encodedDataPackets[i]->size;
+	}
+
+	if (m_videoConn.write_n(frame, sizeof(VideoPkt)) != sizeof(VideoPkt))
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	if (m_videoConn.write_n(frame->encodedDataPacket->data, frame->encodedDataPacket->size) != frame->encodedDataPacket->size)
+	if (m_videoConn.write_n(frameData, localSize) != localSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
+
+	free(frameData);
 }
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)

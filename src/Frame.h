@@ -2,11 +2,13 @@
 
 #include <libavformat/avformat.h>
 
-struct VideoFrame
+struct VideoPkt
 {
 	size_t encodedDataSize = 0;
-	AVPacket* encodedDataPacket;
-	NDIlib_video_frame_v2_t videoFrame;
+	
+	int frameSizes[30];
+	NDIlib_video_frame_v2_t videoFrames[30];
+	AVPacket* encodedDataPackets[30];
 };
 
 struct AudioFrame

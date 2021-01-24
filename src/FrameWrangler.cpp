@@ -30,30 +30,34 @@ void FrameWrangler::Main()
 	{
 		PROFILE_FRAME("MainLoop");
 
-		if (m_LastFrameGood)
-			m_frameSender->WaitForConfirmation();
+		m_frameSender->WaitForConfirmation();
 
-		VideoFrame video_frame;
-		video_frame.videoFrame = *m_ndiManager->CaptureVideoFrame();
-
-		video_frame.encodedDataPacket = m_encoder->Encode(&video_frame.videoFrame);
-
-		if (video_frame.encodedDataPacket != nullptr && video_frame.encodedDataPacket->size != 0)
+		for (int i = 0; i < 30; i++)
 		{
+			auto video_frame = *m_ndiManager->CaptureVideoFrame();
+			auto pkt = m_encoder->Encode(&video_frame);
 
-			video_frame.encodedDataSize = video_frame.encodedDataPacket->size;
+			if (pkt != nullptr && pkt->size != 0)
+			{
+				video_pkt.videoFrames[i] = video_frame;
+				video_pkt.encodedDataPackets[i] = pkt;
+				video_pkt.frameSizes[i] = pkt->size;
 
-			m_frameSender->SendVideoFrame(&video_frame);
-
-			m_LastFrameGood = true;
-
-			m_ndiManager->FreeVideo(&(video_frame.videoFrame));
-			av_packet_free(&(video_frame.encodedDataPacket));
+				video_pkt.encodedDataSize += pkt->size;
+			}
+			else
+			{
+				m_ndiManager->FreeVideo(&video_frame);
+				av_packet_free(&pkt);
+			}
 		}
-		else
+
+		m_frameSender->SendVideoFrame(&video_pkt);
+
+		for (int i = 0; i < 30; i++)
 		{
-			m_ndiManager->FreeVideo(&(video_frame.videoFrame));
-			m_LastFrameGood = false;
+			m_ndiManager->FreeVideo(&(video_pkt.videoFrames[i]));
+			av_packet_free(&(video_pkt.encodedDataPackets[i]));
 		}
 	}
 }
