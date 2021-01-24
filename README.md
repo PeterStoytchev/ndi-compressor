@@ -3,6 +3,8 @@ Compresses a NDI source and outputs it to a ndi-server (another repo you can fin
 
 You can think of the whole system, as an adapter, that sits in-between an NDI source and viewer. It captures the signal from the NDI source, compresses it (using ffmpeg libraries), sends it across the network (sockpp) to a server which will distribute it to ndi-compressor(s) which decompress it and turns it back into a NDI source which viewers can view. This enables NDI over low bandwidth networks, such as Wi-Fi or WAN, without the need for NDI-HX hardware or services which, essentailly, do the same thing (compress the signal to reduce bandwith).
 
+Keep in mind that this is a hobby project created by a novice. Do not expect miracles. That said, I will try and make it as good as possible.
+
 I will keep the master branch stable, and will push anything new to dev (as is customary).
 
 # How to compile and install.
@@ -30,6 +32,7 @@ NOTE 2: This is, and always will be (or at least until NewTek release a cross-pl
 
 # Updates
 UPDATE 1: Multi-threading the various stages ended up being not a good idea, impact was negative in my testing. Currently the system is back to a single thread for video and another one for audio. I may revisit the idea at some point. Did some testing over WAN and network performance is currently a big problem. This is my main issue to solve. It works well over LAN (duh, so does NDI) as well as Wi-Fi as long as the bitrate is kept in check.
+I also added support for the Optik profiler. By default it is enabled, if you want to disable it, remove the "#define __PROFILE" in Profiler.h and recompile.
 
 # TODO
 1. Build system support.
