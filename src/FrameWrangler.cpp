@@ -43,12 +43,13 @@ void FrameWrangler::Main()
 				video_pkt.encodedDataPackets[i] = pkt;
 				video_pkt.frameSizes[i] = pkt->size;
 
-				video_pkt.encodedDataSize += pkt->size;
+				//video_pkt.encodedDataSize += pkt->size;
 			}
 			else
 			{
 				m_ndiManager->FreeVideo(&video_frame);
 				av_packet_free(&pkt);
+				i--;
 			}
 		}
 

@@ -4,9 +4,7 @@
 
 struct VideoPkt
 {
-	size_t encodedDataSize = 0;
-	
-	int frameSizes[30];
+	unsigned int frameSizes[30];
 	NDIlib_video_frame_v2_t videoFrames[30];
 	AVPacket* encodedDataPackets[30];
 };
