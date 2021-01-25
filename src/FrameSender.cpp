@@ -41,10 +41,6 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 
 	for (int i = 0; i < 30; i++) { dataSize += frame->frameSizes[i]; }
 
-#if 1
-	__debugbreak();
-#endif
-
 	//TODO: make this a global buffer so that we dont have to allocate memory every time
 	uint8_t* frameData = (uint8_t*)malloc(totalSize);
 	
