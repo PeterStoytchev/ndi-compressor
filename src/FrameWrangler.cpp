@@ -30,8 +30,6 @@ void FrameWrangler::Main()
 	{
 		PROFILE_FRAME("MainLoop");
 
-		m_frameSender->WaitForConfirmation();
-
 		for (int i = 0; i < 30; i++)
 		{
 			auto video_frame = *m_ndiManager->CaptureVideoFrame();
@@ -52,6 +50,8 @@ void FrameWrangler::Main()
 				i--;
 			}
 		}
+
+		m_frameSender->WaitForConfirmation();
 
 		m_frameSender->SendVideoFrame(&video_pkt);
 
