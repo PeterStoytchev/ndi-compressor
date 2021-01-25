@@ -34,34 +34,35 @@ FrameSender::~FrameSender()
 void FrameSender::SendVideoFrame(VideoPkt* frame)
 {
 	PROFILE_FUNC();
-	
-	size_t dataSize = 0;
-	size_t videoPktNetSize = offsetof(VideoPkt, encodedDataPackets);
-	size_t totalSize = dataSize + videoPktNetSize;
 
+	//compute total buffer size
+	size_t dataSize = 0;
 	for (int i = 0; i < 30; i++) { dataSize += frame->frameSizes[i]; }
 
 	//TODO: make this a global buffer so that we dont have to allocate memory every time
-	uint8_t* frameData = (uint8_t*)malloc(totalSize);
+	uint8_t* frameData = (uint8_t*)malloc(dataSize);
 	
-	memcpy(frameData, frame, videoPktNetSize);
-
+	//copy data into the buffewrw
+	size_t localSize = 0;
 	for (int i = 0; i < 30; i++)
 	{
-		memcpy(frameData + videoPktNetSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
-		videoPktNetSize += frame->encodedDataPackets[i]->size;
+		memcpy(frameData + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
+		localSize += frame->encodedDataPackets[i]->size;
 	}
 
-	if (m_videoConn.write_n(&totalSize, sizeof(size_t)) != sizeof(size_t))
+	//write the videopkt
+	if (m_videoConn.write_n(frame, sizeof(VideoPkt)) != sizeof(VideoPkt))
 	{
 		printf("Failed to write video frame size!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	if (m_videoConn.write_n(frameData, totalSize) != totalSize)
+	//write the video data
+	if (m_videoConn.write_n(frameData, dataSize) != dataSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
+	//free the buffer used for sending the data
 	free(frameData);
 }
 
