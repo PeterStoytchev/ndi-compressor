@@ -40,21 +40,21 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 	for (int i = 0; i < 30; i++) { dataSize += frame->frameSizes[i]; }
 
 	//allocate more memory to the global frame buffer if necessary
-	if (m_maxFrameBatchSize < dataSize)
+	if (m_maxFrameBufferSize < dataSize)
 	{
-		printf("[DebugLog] Increasing buffer size from %llu to %llu\n", m_maxFrameBatchSize, dataSize);
+		printf("[DebugLog] Increasing buffer size from %llu to %llu\n", m_maxFrameBufferSize, dataSize);
 
-		m_globalFrameData = (uint8_t*)realloc(m_globalFrameData, dataSize);
-		m_maxFrameBatchSize = dataSize;
+		m_globalFrameBuffer = (uint8_t*)realloc(m_globalFrameBuffer, dataSize);
+		m_maxFrameBufferSize = dataSize;
 
-		assert(m_globalFrameData != nullptr, "Failed to allocate more memory, probabbly becasue the system is out of RAM!");
+		assert(m_globalFrameBuffer != nullptr, "Failed to allocate more memory, probabbly becasue the system is out of RAM!");
 	}
 	
 	//copy data into the buffer
 	size_t localSize = 0;
 	for (int i = 0; i < 30; i++)
 	{
-		memcpy(m_globalFrameData + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
+		memcpy(m_globalFrameBuffer + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
 		localSize += frame->encodedDataPackets[i]->size;
 	}
 
@@ -65,7 +65,7 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 	}
 
 	//write the video data
-	if (m_videoConn.write_n(m_globalFrameData, dataSize) != dataSize)
+	if (m_videoConn.write_n(m_globalFrameBuffer, dataSize) != dataSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
