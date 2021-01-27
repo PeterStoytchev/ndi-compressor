@@ -39,14 +39,22 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 	size_t dataSize = 0;
 	for (int i = 0; i < 30; i++) { dataSize += frame->frameSizes[i]; }
 
-	//TODO: make this a global buffer so that we dont have to allocate memory every time
-	uint8_t* frameData = (uint8_t*)malloc(dataSize);
+	//allocate more memory to the global frame buffer if necessary
+	if (m_maxFrameBatchSize < dataSize)
+	{
+		printf("[DebugLog] Increasing buffer size from %llu to %llu\n", m_maxFrameBatchSize, dataSize);
+
+		m_globalFrameData = (uint8_t*)realloc(m_globalFrameData, dataSize);
+		m_maxFrameBatchSize = dataSize;
+
+		assert(m_globalFrameData != nullptr, "Failed to allocate more memory, probabbly becasue the system is out of RAM!");
+	}
 	
-	//copy data into the buffewrw
+	//copy data into the buffer
 	size_t localSize = 0;
 	for (int i = 0; i < 30; i++)
 	{
-		memcpy(frameData + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
+		memcpy(m_globalFrameData + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
 		localSize += frame->encodedDataPackets[i]->size;
 	}
 
@@ -57,13 +65,10 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 	}
 
 	//write the video data
-	if (m_videoConn.write_n(frameData, dataSize) != dataSize)
+	if (m_videoConn.write_n(m_globalFrameData, dataSize) != dataSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
-
-	//free the buffer used for sending the data
-	free(frameData);
 }
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)

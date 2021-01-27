@@ -30,6 +30,9 @@ public:
 	void WaitForConfirmation();
 
 private:
+	size_t m_maxFrameBatchSize = 0;
+	uint8_t* m_globalFrameData = NULL;
+
 	sockpp::tcp_connector m_videoConn;
 	sockpp::tcp_connector m_videoConnAux;
 	sockpp::tcp_connector m_audioConn;

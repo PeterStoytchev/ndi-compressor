@@ -22,7 +22,7 @@ void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 	PROFILE_THREAD("AudioThread");
 	while (!exit_loop)
 	{
-		PROFILE_FUNC();
+		PROFILE_FUNC("AudioFrame");
 
 		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
 
