@@ -67,7 +67,7 @@ NdiManager::~NdiManager()
 
 NDIlib_video_frame_v2_t* NdiManager::CaptureVideoFrame()
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 	NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
 
 	NDIlib_recv_capture_v2(m_recvInstance, video_frame, nullptr, nullptr, 5000);
@@ -77,7 +77,7 @@ NDIlib_video_frame_v2_t* NdiManager::CaptureVideoFrame()
 
 NDIlib_audio_frame_v2_t* NdiManager::CaptureAudioFrame()
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 
 	NDIlib_audio_frame_v2_t* audio_frame = new NDIlib_audio_frame_v2_t();
 	NDIlib_recv_capture_v2(m_recvInstance, nullptr, audio_frame, nullptr, 5000);
@@ -87,14 +87,14 @@ NDIlib_audio_frame_v2_t* NdiManager::CaptureAudioFrame()
 
 void NdiManager::FreeVideo(const NDIlib_video_frame_v2_t* p_video_data)
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 
 	NDIlib_recv_free_video_v2(m_recvInstance, p_video_data);
 }
 
 void NdiManager::FreeAudio(const NDIlib_audio_frame_v2_t* p_audio_data)
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 
 	NDIlib_recv_free_audio_v2(m_recvInstance, p_audio_data);
 }

@@ -28,7 +28,7 @@ void FrameWrangler::Main()
 {
 	while (!m_exit)
 	{
-		PROFILE_FRAME("MainLoop");
+		OPTICK_FRAME("MainLoop");
 
 		for (int i = 0; i < 30; i++)
 		{

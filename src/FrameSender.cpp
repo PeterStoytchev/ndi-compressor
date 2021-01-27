@@ -33,7 +33,7 @@ FrameSender::~FrameSender()
 
 void FrameSender::SendVideoFrame(VideoPkt* frame)
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 
 	//compute total buffer size
 	size_t dataSize = 0;
@@ -73,7 +73,7 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 
 	AudioFrame frame;
 	frame.audioFrame = *ndi_frame;
@@ -92,7 +92,7 @@ void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
 
 void FrameSender::WaitForConfirmation()
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 	
 	char c = 0;
 	if (m_videoConn.read_n(&c, sizeof(c)) == -1)
