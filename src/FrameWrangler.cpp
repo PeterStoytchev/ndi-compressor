@@ -30,7 +30,7 @@ void FrameWrangler::Main()
 	{
 		OPTICK_FRAME("MainLoop");
 
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
 			auto video_frame = *m_ndiManager->CaptureVideoFrame();
 			auto pkt = m_encoder->Encode(&video_frame);
@@ -40,14 +40,11 @@ void FrameWrangler::Main()
 				video_pkt.videoFrames[i] = video_frame;
 				video_pkt.encodedDataPackets[i] = pkt;
 				video_pkt.frameSizes[i] = pkt->size;
-
-				//video_pkt.encodedDataSize += pkt->size;
 			}
 			else
 			{
 				m_ndiManager->FreeVideo(&video_frame);
 				av_packet_free(&pkt);
-				i--;
 			}
 		}
 
@@ -55,7 +52,7 @@ void FrameWrangler::Main()
 
 		m_frameSender->SendVideoFrame(&video_pkt);
 
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
 			m_ndiManager->FreeVideo(&(video_pkt.videoFrames[i]));
 			av_packet_free(&(video_pkt.encodedDataPackets[i]));

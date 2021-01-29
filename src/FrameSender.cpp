@@ -37,7 +37,7 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 
 	//compute total buffer size
 	size_t dataSize = 0;
-	for (int i = 0; i < 30; i++) { dataSize += frame->frameSizes[i]; }
+	for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += frame->frameSizes[i]; }
 
 	//allocate more memory to the global frame buffer if necessary
 	if (m_maxFrameBufferSize < dataSize)
@@ -52,7 +52,7 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 	
 	//copy data into the buffer
 	size_t localSize = 0;
-	for (int i = 0; i < 30; i++)
+	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 	{
 		memcpy(m_globalFrameBuffer + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
 		localSize += frame->encodedDataPackets[i]->size;
