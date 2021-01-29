@@ -24,7 +24,7 @@ public:
 	FrameSender(const char* host, in_port_t videoPort, in_port_t audioPort);
 	~FrameSender();
 
-	void SendVideoFrame(VideoPkt* frame);
+	void SendVideoFrame(std::vector<VideoPkt>& frames);
 	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
 
 	void WaitForConfirmation();

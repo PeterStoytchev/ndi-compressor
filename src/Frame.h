@@ -6,9 +6,9 @@
 
 struct VideoPkt
 {
-	unsigned int frameSizes[FRAME_BATCH_SIZE];
-	NDIlib_video_frame_v2_t videoFrames[FRAME_BATCH_SIZE];
-	AVPacket* encodedDataPackets[FRAME_BATCH_SIZE];
+	unsigned int frameSize;
+	NDIlib_video_frame_v2_t videoFrame;
+	AVPacket* encodedDataPacket;
 };
 
 struct AudioFrame

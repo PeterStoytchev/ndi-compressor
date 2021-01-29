@@ -31,13 +31,13 @@ FrameSender::~FrameSender()
 }
 
 
-void FrameSender::SendVideoFrame(VideoPkt* frame)
+void FrameSender::SendVideoFrame(std::vector<VideoPkt>& frames)
 {
 	OPTICK_EVENT();
 
 	//compute total buffer size
-	size_t dataSize = 0;
-	for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += frame->frameSizes[i]; }
+	size_t dataSize = FRAME_BATCH_SIZE * sizeof(VideoPkt);
+	for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += frames[i].frameSize; }
 
 	//allocate more memory to the global frame buffer if necessary
 	if (m_maxFrameBufferSize < dataSize)
@@ -49,22 +49,29 @@ void FrameSender::SendVideoFrame(VideoPkt* frame)
 
 		assert(m_globalFrameBuffer != nullptr, "Failed to allocate more memory, probabbly becasue the system is out of RAM!");
 	}
-	
-	//copy data into the buffer
+
+	//copy the video pkt data into the buffer
 	size_t localSize = 0;
-	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
+	for (VideoPkt pkt : frames)
 	{
-		memcpy(m_globalFrameBuffer + localSize, frame->encodedDataPackets[i]->data, frame->encodedDataPackets[i]->size);
-		localSize += frame->encodedDataPackets[i]->size;
+		memcpy(m_globalFrameBuffer + localSize, &pkt, sizeof(VideoPkt));
+		localSize += sizeof(VideoPkt);
 	}
 
-	//write the videopkt
-	if (m_videoConn.write_n(frame, sizeof(VideoPkt)) != sizeof(VideoPkt))
+	//copy data into the buffer
+	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
+	{
+		memcpy(m_globalFrameBuffer + localSize, frames[i].encodedDataPacket->data, frames[i].encodedDataPacket->size);
+		localSize += frames[i].encodedDataPacket->size;
+	}
+
+	//write the size of the buffer
+	if (m_videoConn.write_n(&dataSize, sizeof(size_t)) != sizeof(size_t))
 	{
 		printf("Failed to write video frame size!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
-	//write the video data
+	//write the buffer
 	if (m_videoConn.write_n(m_globalFrameBuffer, dataSize) != dataSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());

@@ -26,9 +26,8 @@ private:
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 	
-	VideoPkt video_pkt;
-
 	std::thread mainHandler;
 
 	std::atomic<bool> m_exit = false;
+	std::vector<VideoPkt> video_pkts;
 };

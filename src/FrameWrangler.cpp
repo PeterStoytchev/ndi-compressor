@@ -26,6 +26,8 @@ void FrameWrangler::Stop()
 
 void FrameWrangler::Main()
 {
+	video_pkts.reserve(FRAME_BATCH_SIZE);
+
 	while (!m_exit)
 	{
 		OPTICK_FRAME("MainLoop");
@@ -37,9 +39,13 @@ void FrameWrangler::Main()
 
 			if (pkt != nullptr && pkt->size != 0)
 			{
-				video_pkt.videoFrames[i] = video_frame;
-				video_pkt.encodedDataPackets[i] = pkt;
-				video_pkt.frameSizes[i] = pkt->size;
+				VideoPkt video_pkt;
+
+				video_pkt.videoFrame = video_frame;
+				video_pkt.encodedDataPacket = pkt;
+				video_pkt.frameSize = pkt->size;
+
+				video_pkts.push_back(video_pkt);
 			}
 			else
 			{
@@ -49,13 +55,14 @@ void FrameWrangler::Main()
 		}
 
 		m_frameSender->WaitForConfirmation();
-
-		m_frameSender->SendVideoFrame(&video_pkt);
+		m_frameSender->SendVideoFrame(video_pkts);
 
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			m_ndiManager->FreeVideo(&(video_pkt.videoFrames[i]));
-			av_packet_free(&(video_pkt.encodedDataPackets[i]));
+			m_ndiManager->FreeVideo(&(video_pkts[i].videoFrame));
+			av_packet_free(&(video_pkts[i].encodedDataPacket));
 		}
+
+		video_pkts.clear();
 	}
 }
