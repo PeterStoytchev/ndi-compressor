@@ -10,6 +10,7 @@
 #include "Encoder.h"
 #include "Frame.h"
 #include "NdiManager.h"
+#include "FrameQueue.h"
 #include "FrameSender.h"
 
 class FrameWrangler
@@ -20,14 +21,24 @@ public:
 
 	void Stop();
 
+	void Ndi();
 	void Main();
+
 private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 	
+	std::vector<VideoPkt> m_ndiQueue;
+
+	std::mutex m_ndiMutex;
+
+	std::thread ndiHandler;
 	std::thread mainHandler;
 
-	std::atomic<bool> m_exit = false;
 	std::vector<VideoPkt> video_pkts;
+
+	std::atomic<bool> m_exit = false;
+
+	bool sameThreadLocked = false;
 };

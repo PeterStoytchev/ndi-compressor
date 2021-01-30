@@ -198,6 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Frame.h" />
+    <ClInclude Include="src\FrameQueue.h" />
     <ClInclude Include="src\FrameSender.h" />
     <ClInclude Include="src\FrameWrangler.h" />
     <ClInclude Include="src\NdiManager.h" />
