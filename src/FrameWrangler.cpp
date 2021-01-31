@@ -42,47 +42,32 @@ void FrameWrangler::Ndi()
 
 		if (!sameThreadLocked)
 		{
+			OPTICK_EVENT("Locking");
 			m_ndiMutex.lock();
 			sameThreadLocked = true;
 		}
 
-		auto video_frame = *m_ndiManager->CaptureVideoFrame();
-		auto pkt = m_encoder->Encode(&video_frame);
+		auto video_frame = m_ndiManager->CaptureVideoFrame();
+		m_ndiQueue.push_back(video_frame);
 
-		if (pkt != nullptr && pkt->size != 0)
+		if (m_ndiQueue.size() > FRAME_BATCH_SIZE)
 		{
-			VideoPkt video_pkt;
+			OPTICK_EVENT("ShiftQueue");
+			//free the first frame in the vector
+			m_ndiManager->FreeVideo(m_ndiQueue[0]);
 
-			video_pkt.videoFrame = video_frame;
-			video_pkt.encodedDataPacket = pkt;
-			video_pkt.frameSize = pkt->size;
-
-			m_ndiQueue.push_back(video_pkt);
-
-			if (m_ndiQueue.size() > FRAME_BATCH_SIZE)
-			{
-				//free the first frame in the vector
-				m_ndiManager->FreeVideo(&(m_ndiQueue[0].videoFrame));
-				av_packet_free(&(m_ndiQueue[0].encodedDataPacket));
-
-				//shift the vector one element to the front
-				std::move(m_ndiQueue.begin() + 1, m_ndiQueue.end(), m_ndiQueue.begin());
-				m_ndiQueue.pop_back();
-			}
+			//shift the vector one element to the front
+			std::move(m_ndiQueue.begin() + 1, m_ndiQueue.end(), m_ndiQueue.begin());
+			m_ndiQueue.pop_back();
 		}
-		else
-		{
-			m_ndiManager->FreeVideo(&video_frame);
-			av_packet_free(&pkt);
-		}
-
+		
 		if (m_ndiQueue.size() == FRAME_BATCH_SIZE)
 		{
+			OPTICK_EVENT("GiveChanceForLock");
 			m_ndiMutex.unlock();
+			std::this_thread::sleep_for(std::chrono::microseconds(10));
 			sameThreadLocked = false;
-			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 		}
-
 	}
 }
 
@@ -94,23 +79,51 @@ void FrameWrangler::Main()
 
 		m_frameSender->WaitForConfirmation();
 		
-		m_ndiMutex.lock();
-
-		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			video_pkts.push_back(m_ndiQueue[i]);
+			OPTICK_EVENT("AquireQueue");
+			m_ndiMutex.lock();
 		}
 
-		m_ndiQueue.clear();
-		
-		m_ndiMutex.unlock();
+		{
+			OPTICK_EVENT("QueueCopyAndUnlock");
+
+			for (int i = 0; i < FRAME_BATCH_SIZE; i++) { m_workingQueue.push_back(m_ndiQueue[i]); }
+			m_ndiQueue.clear();
+
+			m_ndiMutex.unlock();
+		}
+
+
+		for (NDIlib_video_frame_v2_t* frame : m_workingQueue)
+		{
+			auto pkt = m_encoder->Encode(frame);
+
+			VideoPkt video_pkt;
+			if (pkt != nullptr && pkt->size != 0)
+			{
+				video_pkt.videoFrame = *frame;
+				video_pkt.encodedDataPacket = pkt;
+				video_pkt.frameSize = pkt->size;
+			}
+			else
+			{
+				m_ndiManager->FreeVideo(frame);
+				av_packet_free(&pkt);
+			}
+
+			video_pkts.push_back(video_pkt);
+		}
+		m_workingQueue.clear();
 
 		m_frameSender->SendVideoFrame(video_pkts);
 
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			m_ndiManager->FreeVideo(&(video_pkts[i].videoFrame));
-			av_packet_free(&(video_pkts[i].encodedDataPacket));
+			if (video_pkts[i].frameSize != 0)
+			{
+				m_ndiManager->FreeVideo(&(video_pkts[i].videoFrame));
+				av_packet_free(&(video_pkts[i].encodedDataPacket));
+			}
 		}
 
 		video_pkts.clear();

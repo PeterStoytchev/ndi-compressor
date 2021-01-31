@@ -10,7 +10,6 @@
 #include "Encoder.h"
 #include "Frame.h"
 #include "NdiManager.h"
-#include "FrameQueue.h"
 #include "FrameSender.h"
 
 class FrameWrangler
@@ -29,7 +28,9 @@ private:
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 	
-	std::vector<VideoPkt> m_ndiQueue;
+	std::vector<NDIlib_video_frame_v2_t*> m_ndiQueue;
+	std::vector<NDIlib_video_frame_v2_t*> m_workingQueue;
+
 
 	std::mutex m_ndiMutex;
 

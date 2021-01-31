@@ -52,8 +52,11 @@ void FrameSender::SendVideoFrame(std::vector<VideoPkt>& frames)
 	//copy data into the buffer
 	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 	{
-		memcpy(m_globalFrameBuffer.m_buffer + localSize, frames[i].encodedDataPacket->data, frames[i].encodedDataPacket->size);
-		localSize += frames[i].encodedDataPacket->size;
+		if (frames[i].frameSize != 0)
+		{
+			memcpy(m_globalFrameBuffer.m_buffer + localSize, frames[i].encodedDataPacket->data, frames[i].encodedDataPacket->size);
+			localSize += frames[i].encodedDataPacket->size;
+		}
 	}
 
 	//write the size of the buffer
