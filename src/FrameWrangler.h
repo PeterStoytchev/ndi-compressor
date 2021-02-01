@@ -4,6 +4,7 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
+#include <condition_variable>
 
 #include "Processing.NDI.Lib.h"
 
@@ -28,18 +29,16 @@ private:
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 	
-	std::vector<NDIlib_video_frame_v2_t*> m_ndiQueue;
-	std::vector<NDIlib_video_frame_v2_t*> m_workingQueue;
-
+	std::vector<VideoPkt> m_frameQueue;
 
 	std::mutex m_ndiMutex;
+	std::mutex m_cvMutex;
+
+	std::condition_variable m_cv;
 
 	std::thread ndiHandler;
 	std::thread mainHandler;
 
-	std::vector<VideoPkt> video_pkts;
-
 	std::atomic<bool> m_exit = false;
-
-	bool sameThreadLocked = false;
+	std::atomic<bool> m_shouldRun = true;
 };

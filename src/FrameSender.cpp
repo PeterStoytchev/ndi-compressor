@@ -35,34 +35,37 @@ void FrameSender::SendVideoFrame(std::vector<VideoPkt>& frames)
 {
 	OPTICK_EVENT();
 
+	printf("sending %zu frames\n", frames.size());
+
 	//compute total buffer size
-	size_t dataSize = FRAME_BATCH_SIZE * sizeof(VideoPkt);
-	for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += frames[i].frameSize; }
+	size_t dataSize = frames.size() * sizeof(VideoPkt);
+	for (int i = 0; i < frames.size(); i++) { dataSize += frames[i].frameSize; }
 
 	m_globalFrameBuffer.GrowIfNeeded(dataSize); //grow the buffer if needed
 
 	//copy the video pkt data into the buffer
 	size_t localSize = 0;
-	for (VideoPkt pkt : frames)
+	for (int i = 0; i < frames.size(); i++)
 	{
-		memcpy(m_globalFrameBuffer.m_buffer + localSize, &pkt, sizeof(VideoPkt));
+		memcpy(m_globalFrameBuffer.m_buffer + localSize, &(frames[i]), sizeof(VideoPkt));
 		localSize += sizeof(VideoPkt);
 	}
 
 	//copy data into the buffer
-	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
+	for (int i = 0; i < frames.size(); i++)
 	{
-		if (frames[i].frameSize != 0)
-		{
-			memcpy(m_globalFrameBuffer.m_buffer + localSize, frames[i].encodedDataPacket->data, frames[i].encodedDataPacket->size);
-			localSize += frames[i].encodedDataPacket->size;
-		}
+		memcpy(m_globalFrameBuffer.m_buffer + localSize, frames[i].encodedDataPacket->data, frames[i].encodedDataPacket->size);
+		localSize += frames[i].encodedDataPacket->size;
 	}
 
-	//write the size of the buffer
-	if (m_videoConn.write_n(&dataSize, sizeof(size_t)) != sizeof(size_t))
+	VideoPktDetails details;
+	details.frameCount = frames.size();
+	details.dataSize = dataSize;
+
+	//write buffer details
+	if (m_videoConn.write_n(&details, sizeof(VideoPktDetails)) != sizeof(VideoPktDetails))
 	{
-		printf("Failed to write video frame size!\nError: %s\n", m_videoConn.last_error_str().c_str());
+		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 
 	//write the buffer

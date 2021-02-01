@@ -19,10 +19,10 @@ static void sigint_handler(int)
 
 void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
 {
-	OPTICK_THREAD("AudioThread");
+	//OPTICK_THREAD("AudioThread");
 	while (!exit_loop)
 	{
-		OPTICK_EVENT("AudioFrame");
+		//OPTICK_EVENT("AudioFrame");
 
 		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
 

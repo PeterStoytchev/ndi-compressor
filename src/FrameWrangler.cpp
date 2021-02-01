@@ -8,18 +8,19 @@ FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, E
 	this->m_ndiManager = ndiManager;
 	this->m_frameSender = frameSender;
 	
-	video_pkts.reserve(FRAME_BATCH_SIZE);
-	m_ndiQueue.reserve(FRAME_BATCH_SIZE);
-
-	mainHandler = std::thread([this] {
-		Main();
-	});
-	mainHandler.detach();
+	m_frameQueue.reserve(FRAME_BATCH_SIZE);
 
 	ndiHandler = std::thread([this] {
 		Ndi();
 	});
 	ndiHandler.detach();
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1)); //kinda hacky, couldnt think of anything else, fight me
+
+	mainHandler = std::thread([this] {
+		Main();
+	});
+	mainHandler.detach();
 }
 
 FrameWrangler::~FrameWrangler()
@@ -38,94 +39,71 @@ void FrameWrangler::Ndi()
 
 	while (!m_exit)
 	{
-		OPTICK_EVENT();
-
-		if (!sameThreadLocked)
+		if (m_shouldRun)
 		{
-			OPTICK_EVENT("Locking");
-			m_ndiMutex.lock();
-			sameThreadLocked = true;
+			if (m_frameQueue.size() < 240)
+			{
+				OPTICK_EVENT();
+
+				m_ndiMutex.try_lock();
+
+				auto video_frame = *m_ndiManager->CaptureVideoFrame();
+				auto pkt = m_encoder->Encode(&video_frame);
+
+				if (pkt != nullptr && pkt->size != 0)
+				{
+					VideoPkt video_pkt;
+
+					video_pkt.videoFrame = video_frame;
+					video_pkt.encodedDataPacket = pkt;
+					video_pkt.frameSize = pkt->size;
+
+					m_frameQueue.push_back(video_pkt);
+				}
+				else
+				{
+					m_ndiManager->FreeVideo(&video_frame);
+					av_packet_free(&pkt);
+				}
+			}
 		}
-
-		auto video_frame = m_ndiManager->CaptureVideoFrame();
-		m_ndiQueue.push_back(video_frame);
-
-		if (m_ndiQueue.size() > FRAME_BATCH_SIZE)
+		else
 		{
-			OPTICK_EVENT("ShiftQueue");
-			//free the first frame in the vector
-			m_ndiManager->FreeVideo(m_ndiQueue[0]);
-
-			//shift the vector one element to the front
-			std::move(m_ndiQueue.begin() + 1, m_ndiQueue.end(), m_ndiQueue.begin());
-			m_ndiQueue.pop_back();
+			m_ndiMutex.unlock();
+		
+			std::unique_lock<std::mutex> lk(m_cvMutex);
+			m_cv.wait(lk);
+			
+			lk.unlock();
 		}
 		
-		if (m_ndiQueue.size() == FRAME_BATCH_SIZE)
-		{
-			OPTICK_EVENT("GiveChanceForLock");
-			m_ndiMutex.unlock();
-			std::this_thread::sleep_for(std::chrono::microseconds(10));
-			sameThreadLocked = false;
-		}
 	}
 }
 
 void FrameWrangler::Main()
 {
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
 	while (!m_exit)
 	{
 		OPTICK_FRAME("MainLoop");
 
 		m_frameSender->WaitForConfirmation();
+		m_shouldRun = false;
+
+		m_ndiMutex.lock();
+		m_frameSender->SendVideoFrame(m_frameQueue);
+
+		for (int i = 0; i < m_frameQueue.size(); i++)
+		{
+			m_ndiManager->FreeVideo(&(m_frameQueue[i].videoFrame));
+			av_packet_free(&(m_frameQueue[i].encodedDataPacket));
+		}
+
+		m_frameQueue.clear();
+		m_ndiMutex.unlock();
 		
-		{
-			OPTICK_EVENT("AquireQueue");
-			m_ndiMutex.lock();
-		}
-
-		{
-			OPTICK_EVENT("QueueCopyAndUnlock");
-
-			for (int i = 0; i < FRAME_BATCH_SIZE; i++) { m_workingQueue.push_back(m_ndiQueue[i]); }
-			m_ndiQueue.clear();
-
-			m_ndiMutex.unlock();
-		}
-
-
-		for (NDIlib_video_frame_v2_t* frame : m_workingQueue)
-		{
-			auto pkt = m_encoder->Encode(frame);
-
-			VideoPkt video_pkt;
-			if (pkt != nullptr && pkt->size != 0)
-			{
-				video_pkt.videoFrame = *frame;
-				video_pkt.encodedDataPacket = pkt;
-				video_pkt.frameSize = pkt->size;
-			}
-			else
-			{
-				m_ndiManager->FreeVideo(frame);
-				av_packet_free(&pkt);
-			}
-
-			video_pkts.push_back(video_pkt);
-		}
-		m_workingQueue.clear();
-
-		m_frameSender->SendVideoFrame(video_pkts);
-
-		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
-		{
-			if (video_pkts[i].frameSize != 0)
-			{
-				m_ndiManager->FreeVideo(&(video_pkts[i].videoFrame));
-				av_packet_free(&(video_pkts[i].encodedDataPacket));
-			}
-		}
-
-		video_pkts.clear();
+		m_shouldRun = true;
+		m_cv.notify_one();
 	}
 }
