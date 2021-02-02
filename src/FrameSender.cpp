@@ -12,7 +12,7 @@ FrameSender::FrameSender(const char* host, in_port_t videoPort, in_port_t audioP
 		assert(0);
 	}
 
-	printf("Video connection created to: %s at port %u.\n", host, videoPort);
+	printf("Video connections created to: %s at port %u.\n", host, videoPort);
 
 	m_audioConn.connect({ host, audioPort });
 	if (!m_audioConn)
@@ -67,8 +67,8 @@ void FrameSender::SendVideoFrame(std::vector<VideoPkt>& frames)
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
-
-	//write the buffer
+	
+	//write to the network buffer
 	if (m_videoConn.write_n(m_globalFrameBuffer.m_buffer, dataSize) != dataSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());

@@ -57,10 +57,8 @@ public:
 	void WaitForConfirmation();
 
 private:
-	size_t m_maxFrameBufferSize = 0;
 	FrameBuffer m_globalFrameBuffer;
 
 	sockpp::tcp_connector m_videoConn;
-	sockpp::tcp_connector m_videoConnAux;
 	sockpp::tcp_connector m_audioConn;
 };
