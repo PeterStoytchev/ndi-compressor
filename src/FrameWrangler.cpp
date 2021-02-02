@@ -42,30 +42,29 @@ void FrameWrangler::Ndi()
 	{
 		if (m_shouldRun)
 		{
-			if (m_frameQueue.size() < 240)
+			OPTICK_EVENT();
+
+			m_ndiMutex.try_lock();
+
+			auto video_frame = *m_ndiManager->CaptureVideoFrame();
+			auto pkt = m_encoder->Encode(&video_frame);
+
+			if (pkt != nullptr && pkt->size != 0)
 			{
-				OPTICK_EVENT();
+				VideoPkt video_pkt;
 
-				m_ndiMutex.try_lock();
+				video_pkt.videoFrame = video_frame;
+				video_pkt.encodedDataPacket = pkt;
+				video_pkt.frameSize = pkt->size;
 
-				auto video_frame = *m_ndiManager->CaptureVideoFrame();
-				auto pkt = m_encoder->Encode(&video_frame);
+				m_frameQueue.push_back(video_pkt);
 
-				if (pkt != nullptr && pkt->size != 0)
-				{
-					VideoPkt video_pkt;
-
-					video_pkt.videoFrame = video_frame;
-					video_pkt.encodedDataPacket = pkt;
-					video_pkt.frameSize = pkt->size;
-
-					m_frameQueue.push_back(video_pkt);
-				}
-				else
-				{
-					m_ndiManager->FreeVideo(&video_frame);
-					av_packet_free(&pkt);
-				}
+				m_currentFramesCount++;
+			}
+			else
+			{
+				m_ndiManager->FreeVideo(&video_frame);
+				av_packet_free(&pkt);
 			}
 		}
 		else
@@ -90,9 +89,12 @@ void FrameWrangler::Main()
 		OPTICK_FRAME("MainLoop");
 
 		m_frameSender->WaitForConfirmation();
+		while (m_currentFramesCount < FRAME_BATCH_SIZE); //spinlock until we have at least FRAME_BATCH_SIZE frames in the buffer
 		m_shouldRun = false;
 
 		m_ndiMutex.lock();
+		m_currentFramesCount = 0;
+
 		m_frameSender->SendVideoFrame(m_frameQueue);
 
 		for (int i = 0; i < m_frameQueue.size(); i++)

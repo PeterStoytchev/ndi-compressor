@@ -41,4 +41,6 @@ private:
 
 	std::atomic<bool> m_exit = false;
 	std::atomic<bool> m_shouldRun = true;
+
+	std::atomic<unsigned int> m_currentFramesCount = 0;
 };
