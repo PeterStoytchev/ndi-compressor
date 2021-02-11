@@ -2,7 +2,7 @@
 
 #include <libavformat/avformat.h>
 
-#define FRAME_BATCH_SIZE 60
+#define FRAME_BATCH_SIZE 30
 
 struct VideoPktDetails
 {

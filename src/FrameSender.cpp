@@ -35,7 +35,7 @@ void FrameSender::SendVideoFrame(std::vector<VideoPkt>& frames)
 {
 	OPTICK_EVENT();
 
-	printf("sending %zu frames\n", frames.size());
+	//printf("sending %zu frames\n", frames.size());
 
 	//compute total buffer size
 	size_t dataSize = frames.size() * sizeof(VideoPkt);

@@ -29,18 +29,15 @@ private:
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 	
-	std::vector<VideoPkt> m_frameQueue;
+	std::vector<NDIlib_video_frame_v2_t*> m_frameQueue;
+	std::vector<NDIlib_video_frame_v2_t*> m_encodingQueue;
+	std::vector<VideoPkt> m_sendingQueue;
 
 	std::mutex m_ndiMutex;
-	std::mutex m_cvMutex;
-
-	std::condition_variable m_cv;
 
 	std::thread ndiHandler;
 	std::thread mainHandler;
 
+	bool m_isLocked = false;
 	std::atomic<bool> m_exit = false;
-	std::atomic<bool> m_shouldRun = true;
-
-	std::atomic<unsigned int> m_currentFramesCount = 0;
 };

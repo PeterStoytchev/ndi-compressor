@@ -4,7 +4,7 @@ audioPort: 1338
 ndiSrcName: DESKTOP-G0O595D (wronghousefool)
 encoderName: hevc_nvenc
 bitrateMbps: 10
-gop_size: 1800
+gop_size: 3600
 max_b_frames: 0
 thread_count: 16
 xres: 1920
