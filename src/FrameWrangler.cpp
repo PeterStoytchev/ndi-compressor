@@ -47,9 +47,9 @@ void FrameWrangler::Ndi()
 
 			if (pkt != nullptr && pkt->size != 0)
 			{
-				m_recvBuffer->videoFrames[i] = video_frame;
-				m_recvBuffer->encodedFramePtrs[i] = pkt;
-				m_recvBuffer->encodedFrameSizes[i] = pkt->size;
+				m_recvBuffer->ndiVideoFrames[i] = video_frame;
+				m_recvBuffer->encodedVideoPtrs[i] = pkt;
+				m_recvBuffer->encodedVideoSizes[i] = pkt->size;
 			}
 			else
 			{
@@ -90,12 +90,12 @@ void FrameWrangler::Main()
 		//clear the buffer
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			m_ndiManager->FreeVideo(&(m_sendingBuffer->videoFrames[i]));
+			m_ndiManager->FreeVideo(&(m_sendingBuffer->ndiVideoFrames[i]));
 
-			if (m_sendingBuffer->encodedFrameSizes[i] != 0)
-				av_packet_free(&(m_sendingBuffer->encodedFramePtrs[i]));
+			if (m_sendingBuffer->encodedVideoSizes[i] != 0)
+				av_packet_free(&(m_sendingBuffer->encodedVideoPtrs[i]));
 
-			m_sendingBuffer->encodedFrameSizes[i] = 0;
+			m_sendingBuffer->encodedVideoSizes[i] = 0;
 		}
 	}
 }

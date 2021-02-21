@@ -7,15 +7,21 @@
 struct FrameBuffer
 {
 	size_t totalDataSize = 0;
-	size_t encodedFrameSizes[FRAME_BATCH_SIZE];
-	AVPacket* encodedFramePtrs[FRAME_BATCH_SIZE];
-	NDIlib_video_frame_v2_t videoFrames[FRAME_BATCH_SIZE];
+
+	size_t encodedVideoSizes[FRAME_BATCH_SIZE];
+	AVPacket* encodedVideoPtrs[FRAME_BATCH_SIZE];
+	NDIlib_video_frame_v2_t ndiVideoFrames[FRAME_BATCH_SIZE];
+
+	/*
+	size_t audioSize = 0;
+	size_t encodedAudioSizes[FRAME_BATCH_SIZE];
+	*/
 
 	std::tuple<uint8_t*, size_t> PackData()
 	{
 		//compute total buffer size
 		size_t dataSize = 0;
-		for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += encodedFrameSizes[i]; }
+		for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += encodedVideoSizes[i]; }
 		totalDataSize = dataSize;
 
 		uint8_t* frameData = (uint8_t*)malloc(dataSize); //data buffer used to hold all frame data
@@ -24,8 +30,8 @@ struct FrameBuffer
 		//copy data into the buffer
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			memcpy(frameData + localSize, encodedFramePtrs[i]->data, encodedFrameSizes[i]);
-			localSize += encodedFrameSizes[i];
+			memcpy(frameData + localSize, encodedVideoPtrs[i]->data, encodedVideoSizes[i]);
+			localSize += encodedVideoSizes[i];
 		}
 
 		return std::make_tuple(frameData, dataSize);
