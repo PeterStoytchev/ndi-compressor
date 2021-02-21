@@ -4,17 +4,12 @@
 
 #define FRAME_BATCH_SIZE 30
 
-struct VideoPktDetails
+struct FrameBuffer
 {
-	size_t frameCount = 0;
-	size_t dataSize = 0;
-};
-
-struct VideoPkt
-{
-	unsigned int frameSize = 0;
-	AVPacket* encodedDataPacket;
-	NDIlib_video_frame_v2_t videoFrame;
+	size_t totalDataSize = 0;
+	size_t encodedFrameSizes[FRAME_BATCH_SIZE];
+	AVPacket* encodedFramePtrs[FRAME_BATCH_SIZE];
+	NDIlib_video_frame_v2_t videoFrames[FRAME_BATCH_SIZE];
 };
 
 struct AudioFrame

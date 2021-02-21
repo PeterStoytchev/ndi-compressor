@@ -1,8 +1,8 @@
-ipDest: 10.6.0.3
+ipDest: 192.168.1.106
 videoPort: 1337
 audioPort: 1338
 ndiSrcName: DESKTOP-G0O595D (wronghousefool)
-encoderName: hevc_nvenc
+encoderName: h264_nvenc
 bitrateMbps: 10
 gop_size: 3600
 max_b_frames: 0

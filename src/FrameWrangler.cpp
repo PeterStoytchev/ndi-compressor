@@ -8,14 +8,10 @@ FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, E
 	this->m_ndiManager = ndiManager;
 	this->m_frameSender = frameSender;
 	
-	m_frameQueue.reserve(FRAME_BATCH_SIZE);
-
 	ndiHandler = std::thread([this] {
 		Ndi();
 	});
 	ndiHandler.detach();
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(1)); //kinda hacky, couldnt think of anything else, fight me
 
 	mainHandler = std::thread([this] {
 		Main();
@@ -42,33 +38,36 @@ void FrameWrangler::Ndi()
 	{
 		OPTICK_EVENT();
 
-		if (!m_isLocked) 
-		{ 
-			m_ndiMutex.lock();
-			m_isLocked = true;
-		}
+		m_ndiMutex.lock();
 
-		auto video_frame = m_ndiManager->CaptureVideoFrame();
-		m_frameQueue.push_back(video_frame);
-
-		if (m_frameQueue.size() > FRAME_BATCH_SIZE)
+		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			m_ndiManager->FreeVideo(m_frameQueue[0]);
+			auto video_frame = *m_ndiManager->CaptureVideoFrame();
+			auto pkt = m_encoder->Encode(&video_frame);
 
-			std::move(m_frameQueue.begin() + 1, m_frameQueue.end(), m_frameQueue.begin());
-			m_frameQueue.pop_back();
-
-			m_isLocked = false;
-
-			m_ndiMutex.unlock();
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
+			if (pkt != nullptr && pkt->size != 0)
+			{
+				m_recvBuffer->videoFrames[i] = video_frame;
+				m_recvBuffer->encodedFramePtrs[i] = pkt;
+				m_recvBuffer->encodedFrameSizes[i] = pkt->size;
+			}
+			else
+			{
+				av_packet_free(&pkt);
+				i--;
+			}
 		}
+
+		m_ndiMutex.unlock();
+
+		std::unique_lock<std::mutex> lk(m_cvMutex);
+		m_cv.wait(lk);
 	}
 }
 
 void FrameWrangler::Main()
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	while (!m_exit)
 	{
@@ -76,63 +75,27 @@ void FrameWrangler::Main()
 
 		m_frameSender->WaitForConfirmation();
 
-		//this sucks
-		while (true)
-		{
-			m_ndiMutex.lock();
-			if (m_frameQueue.size() < FRAME_BATCH_SIZE) 
-			{
-				m_ndiMutex.unlock();
-			}
-			else
-			{
-				break;
-			}
-		}
+		m_ndiMutex.lock();
 
-		//copy the frames over
-		for (int i = 0; i < m_frameQueue.size(); i++)
-		{
-			m_encodingQueue.push_back(m_frameQueue[i]);
-		}
+		//swap the two buffers
+		FrameBuffer* local = m_sendingBuffer;
+		m_sendingBuffer = m_recvBuffer;
+		m_recvBuffer = local;
 
-		m_frameQueue.clear();
 		m_ndiMutex.unlock();
+		m_cv.notify_one();
 
-		//encode the frames
-		for (int i = 0; i < m_encodingQueue.size(); i++)
+		m_frameSender->SendVideoFrame(m_sendingBuffer);
+
+		//clear the buffer
+		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			auto pkt = m_encoder->Encode(m_encodingQueue[i]);
+			m_ndiManager->FreeVideo(&(m_sendingBuffer->videoFrames[i]));
 
-			if (pkt != nullptr && pkt->size != 0)
-			{
-				VideoPkt video_pkt;
-				video_pkt.encodedDataPacket = pkt;
-				video_pkt.videoFrame = *m_encodingQueue[i];
-				video_pkt.frameSize = pkt->size;
+			if (m_sendingBuffer->encodedFrameSizes[i] != 0)
+				av_packet_free(&(m_sendingBuffer->encodedFramePtrs[i]));
 
-				m_sendingQueue.push_back(video_pkt);
-			}
-			else
-			{
-				av_packet_free(&pkt);
-			}
+			m_sendingBuffer->encodedFrameSizes[i] = 0;
 		}
-
-		m_frameSender->SendVideoFrame(m_sendingQueue);
-
-		for (int i = 0; i < m_encodingQueue.size(); i++)
-		{
-			m_ndiManager->FreeVideo(m_encodingQueue[i]);
-		}
-
-		for (int i = 0; i < m_sendingQueue.size(); i++)
-		{
-			if (m_sendingQueue[i].frameSize != 0)
-				av_packet_free(&(m_sendingQueue[i].encodedDataPacket));
-		}
-
-		m_encodingQueue.clear();
-		m_sendingQueue.clear();
 	}
 }

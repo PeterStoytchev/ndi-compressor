@@ -13,6 +13,7 @@
 #include "NdiManager.h"
 #include "FrameSender.h"
 
+
 class FrameWrangler
 {
 public:
@@ -29,15 +30,15 @@ private:
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 	
-	std::vector<NDIlib_video_frame_v2_t*> m_frameQueue;
-	std::vector<NDIlib_video_frame_v2_t*> m_encodingQueue;
-	std::vector<VideoPkt> m_sendingQueue;
+	FrameBuffer* m_recvBuffer = new FrameBuffer();
+	FrameBuffer* m_sendingBuffer = new FrameBuffer();
 
 	std::mutex m_ndiMutex;
+	std::mutex m_cvMutex;
+	std::condition_variable m_cv;
 
 	std::thread ndiHandler;
 	std::thread mainHandler;
 
-	bool m_isLocked = false;
 	std::atomic<bool> m_exit = false;
 };

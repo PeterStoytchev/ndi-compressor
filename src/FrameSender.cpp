@@ -31,48 +31,38 @@ FrameSender::~FrameSender()
 }
 
 
-void FrameSender::SendVideoFrame(std::vector<VideoPkt>& frames)
+void FrameSender::SendVideoFrame(FrameBuffer* buffer)
 {
 	OPTICK_EVENT();
 
-	//printf("sending %zu frames\n", frames.size());
-
 	//compute total buffer size
-	size_t dataSize = frames.size() * sizeof(VideoPkt);
-	for (int i = 0; i < frames.size(); i++) { dataSize += frames[i].frameSize; }
+	size_t dataSize = 0;
+	for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += buffer->encodedFrameSizes[i]; }
+	buffer->totalDataSize = dataSize;
 
-	m_globalFrameBuffer.GrowIfNeeded(dataSize); //grow the buffer if needed
+	uint8_t* frameData = (uint8_t*)malloc(dataSize); //data buffer used to hold all frame data
 
-	//copy the video pkt data into the buffer
 	size_t localSize = 0;
-	for (int i = 0; i < frames.size(); i++)
-	{
-		memcpy(m_globalFrameBuffer.m_buffer + localSize, &(frames[i]), sizeof(VideoPkt));
-		localSize += sizeof(VideoPkt);
-	}
-
 	//copy data into the buffer
-	for (int i = 0; i < frames.size(); i++)
+	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 	{
-		memcpy(m_globalFrameBuffer.m_buffer + localSize, frames[i].encodedDataPacket->data, frames[i].encodedDataPacket->size);
-		localSize += frames[i].encodedDataPacket->size;
+		memcpy(frameData + localSize, buffer->encodedFramePtrs[i]->data, buffer->encodedFrameSizes[i]);
+		localSize += buffer->encodedFrameSizes[i];
 	}
-
-	VideoPktDetails details;
-	details.frameCount = frames.size();
-	details.dataSize = dataSize;
 
 	//write buffer details
-	if (m_videoConn.write_n(&details, sizeof(VideoPktDetails)) != sizeof(VideoPktDetails))
+	if (m_videoConn.write_n(buffer, sizeof(FrameBuffer)) != sizeof(FrameBuffer))
 	{
 		printf("Failed to write video frame details!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
 	
-	//write to the network buffer
-	if (m_videoConn.write_n(m_globalFrameBuffer.m_buffer, dataSize) != dataSize)
+	//write buffer data
+	if (m_videoConn.write_n(frameData, dataSize) != dataSize)
 	{
 		printf("Failed to write video data!\nError: %s\n", m_videoConn.last_error_str().c_str());
 	}
+
+	free(frameData);
 }
 
 void FrameSender::SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame)
