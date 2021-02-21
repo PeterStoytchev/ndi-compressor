@@ -35,20 +35,7 @@ void FrameSender::SendVideoFrame(FrameBuffer* buffer)
 {
 	OPTICK_EVENT();
 
-	//compute total buffer size
-	size_t dataSize = 0;
-	for (int i = 0; i < FRAME_BATCH_SIZE; i++) { dataSize += buffer->encodedFrameSizes[i]; }
-	buffer->totalDataSize = dataSize;
-
-	uint8_t* frameData = (uint8_t*)malloc(dataSize); //data buffer used to hold all frame data
-
-	size_t localSize = 0;
-	//copy data into the buffer
-	for (int i = 0; i < FRAME_BATCH_SIZE; i++)
-	{
-		memcpy(frameData + localSize, buffer->encodedFramePtrs[i]->data, buffer->encodedFrameSizes[i]);
-		localSize += buffer->encodedFrameSizes[i];
-	}
+	auto [frameData, dataSize] = buffer->PackData();
 
 	//write buffer details
 	if (m_videoConn.write_n(buffer, sizeof(FrameBuffer)) != sizeof(FrameBuffer))
