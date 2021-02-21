@@ -17,22 +17,6 @@ static void sigint_handler(int)
 	exit_loop = true;
 }
 
-void AudioHandler(NdiManager* ndiManager, FrameSender* frameSender)
-{
-	//OPTICK_THREAD("AudioThread");
-	while (!exit_loop)
-	{
-		//OPTICK_EVENT("AudioFrame");
-
-		NDIlib_audio_frame_v2_t* audio_frame = ndiManager->CaptureAudioFrame();
-
-		frameSender->SendAudioFrame(audio_frame);
-
-		ndiManager->FreeAudio(audio_frame);
-	}
-}
-
-
 int main(int argc, char** argv)
 {
 	EncoderSettings encSettings;
@@ -47,12 +31,10 @@ int main(int argc, char** argv)
 
 	signal(SIGINT, sigint_handler);
 
-	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort, encSettings.audioPort);
+	FrameSender* frameSender = new FrameSender(encSettings.ipDest.c_str(), encSettings.videoPort);
 	NdiManager* ndiManager = new NdiManager(encSettings.ndiSrcName.c_str(), nullptr);
 	wrangler = new FrameWrangler(ndiManager, frameSender, encSettings);
 	
-	AudioHandler(ndiManager, frameSender);
-
 	delete wrangler;
 	delete ndiManager;
 	delete frameSender;

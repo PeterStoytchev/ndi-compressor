@@ -44,12 +44,16 @@ void FrameWrangler::Ndi()
 		{
 			auto video_frame = *m_ndiManager->CaptureVideoFrame();
 			auto pkt = m_encoder->Encode(&video_frame);
+			
+			auto audio_frame = *m_ndiManager->CaptureAudioFrame();
 
 			if (pkt != nullptr && pkt->size != 0)
 			{
 				m_recvBuffer->ndiVideoFrames[i] = video_frame;
 				m_recvBuffer->encodedVideoPtrs[i] = pkt;
 				m_recvBuffer->encodedVideoSizes[i] = pkt->size;
+
+				m_recvBuffer->ndiAudioFrames[i] = audio_frame;
 			}
 			else
 			{
@@ -85,17 +89,22 @@ void FrameWrangler::Main()
 		m_ndiMutex.unlock();
 		m_cv.notify_one();
 
-		m_frameSender->SendVideoFrame(m_sendingBuffer);
+		m_frameSender->SendFrameBuffer(m_sendingBuffer);
 
-		//clear the buffer
+		//reset the buffer state
+		free(m_sendingBuffer->packedData);
+
+		m_sendingBuffer->totalDataSize = 0;
+		m_sendingBuffer->totalAudioSize = 0;
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
+			m_sendingBuffer->encodedVideoSizes[i] = 0;
+
 			m_ndiManager->FreeVideo(&(m_sendingBuffer->ndiVideoFrames[i]));
+			m_ndiManager->FreeAudio(&(m_sendingBuffer->ndiAudioFrames[i]));
 
 			if (m_sendingBuffer->encodedVideoSizes[i] != 0)
 				av_packet_free(&(m_sendingBuffer->encodedVideoPtrs[i]));
-
-			m_sendingBuffer->encodedVideoSizes[i] = 0;
 		}
 	}
 }
