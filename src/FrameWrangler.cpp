@@ -13,6 +13,11 @@ FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, E
 	});
 	ndiHandler.detach();
 
+	ndiAudioHandler = std::thread([this] {
+		NdiAudio();
+	});
+	ndiAudioHandler.detach();
+
 	Main();
 }
 
@@ -32,7 +37,7 @@ void FrameWrangler::Ndi()
 
 	while (!m_exit)
 	{
-		OPTICK_EVENT();
+		OPTICK_EVENT("NdiVideoCapture");
 
 		m_ndiMutex.lock();
 
@@ -41,15 +46,11 @@ void FrameWrangler::Ndi()
 			auto video_frame = *m_ndiManager->CaptureVideoFrame();
 			auto pkt = m_encoder->Encode(&video_frame);
 			
-			auto audio_frame = *m_ndiManager->CaptureAudioFrame();
-
 			if (pkt != nullptr && pkt->size != 0)
 			{
 				m_recvBuffer->ndiVideoFrames[i] = video_frame;
 				m_recvBuffer->encodedVideoPtrs[i] = pkt;
 				m_recvBuffer->encodedVideoSizes[i] = pkt->size;
-
-				m_recvBuffer->ndiAudioFrames[i] = audio_frame;
 			}
 			else
 			{
@@ -58,7 +59,30 @@ void FrameWrangler::Ndi()
 			}
 		}
 
+		while (m_audioDone == false);
+		m_audioDone = false;
+
 		m_ndiMutex.unlock();
+
+		std::unique_lock<std::mutex> lk(m_cvMutex);
+		m_cv.wait(lk);
+	}
+}
+
+void FrameWrangler::NdiAudio()
+{
+	OPTICK_THREAD("NdiAudioThread");
+
+	while (!m_exit)
+	{
+		OPTICK_EVENT("NdiAudioCapture");
+
+		for (int i = 0; i < FRAME_BATCH_SIZE_AUDIO; i++)
+		{
+			m_recvBuffer->ndiAudioFrames[i] = *m_ndiManager->CaptureAudioFrame();
+		}
+
+		m_audioDone = true;
 
 		std::unique_lock<std::mutex> lk(m_cvMutex);
 		m_cv.wait(lk);
@@ -84,6 +108,7 @@ void FrameWrangler::Main()
 
 		m_ndiMutex.unlock();
 		m_cv.notify_one();
+		m_cv.notify_one();
 
 		m_frameSender->SendFrameBuffer(m_sendingBuffer);
 
@@ -95,12 +120,16 @@ void FrameWrangler::Main()
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
 			m_ndiManager->FreeVideo(&(m_sendingBuffer->ndiVideoFrames[i]));
-			m_ndiManager->FreeAudio(&(m_sendingBuffer->ndiAudioFrames[i]));
 
 			if (m_sendingBuffer->encodedVideoSizes[i] != 0)
 				av_packet_free(&(m_sendingBuffer->encodedVideoPtrs[i]));
 
 			m_sendingBuffer->encodedVideoSizes[i] = 0;
+		}
+
+		for (int i = 0; i < FRAME_BATCH_SIZE_AUDIO; i++)
+		{
+			m_ndiManager->FreeAudio(&(m_sendingBuffer->ndiAudioFrames[i]));
 		}
 	}
 }

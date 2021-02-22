@@ -2,7 +2,10 @@
 
 #include <libavformat/avformat.h>
 
+#include <assert.h>
+
 #define FRAME_BATCH_SIZE 30
+#define FRAME_BATCH_SIZE_AUDIO 24
 
 struct FrameBuffer
 {
@@ -13,7 +16,7 @@ struct FrameBuffer
 	NDIlib_video_frame_v2_t ndiVideoFrames[FRAME_BATCH_SIZE];
 
 	size_t totalAudioSize = 0;
-	NDIlib_audio_frame_v2_t ndiAudioFrames[FRAME_BATCH_SIZE];
+	NDIlib_audio_frame_v2_t ndiAudioFrames[FRAME_BATCH_SIZE_AUDIO];
 
 	uint8_t* packedData = nullptr;
 
@@ -23,8 +26,12 @@ struct FrameBuffer
 		totalDataSize = sizeof(FrameBuffer);
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++) 
 		{ 
+			assert(encodedVideoSizes[i] != 666);
 			totalDataSize += encodedVideoSizes[i];
+		}
 
+		for (int i = 0; i < FRAME_BATCH_SIZE_AUDIO; i++)
+		{
 			size_t audioFrameSize = sizeof(float) * ndiAudioFrames[i].no_samples * ndiAudioFrames[i].no_channels;
 			totalDataSize += audioFrameSize;
 		}
@@ -34,14 +41,15 @@ struct FrameBuffer
 
 		size_t localSize = sizeof(FrameBuffer);
 
-		//copy data into the buffer
+		//copy video data into the buffer
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
 			memcpy(packedData + localSize, encodedVideoPtrs[i]->data, encodedVideoSizes[i]);
 			localSize += encodedVideoSizes[i];
 		}
 
-		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
+		//copy audio data into the buffer
+		for (int i = 0; i < FRAME_BATCH_SIZE_AUDIO; i++)
 		{
 			size_t frameSize = sizeof(float) * ndiAudioFrames[i].no_samples * ndiAudioFrames[i].no_channels;
 			memcpy(packedData + localSize, ndiAudioFrames[i].p_data, frameSize);

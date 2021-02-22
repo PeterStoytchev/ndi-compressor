@@ -23,6 +23,7 @@ public:
 	void Stop();
 
 	void Ndi();
+	void NdiAudio();
 	void Main();
 private:
 	Encoder* m_encoder;
@@ -37,7 +38,9 @@ private:
 	std::condition_variable m_cv;
 
 	std::thread ndiHandler;
-	std::thread mainHandler;
+	std::thread ndiAudioHandler;
 
 	std::atomic<bool> m_exit = false;
+	std::atomic<bool> m_audioDone = false;
+	std::atomic<bool> m_collectionDone = false;
 };
