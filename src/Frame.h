@@ -24,10 +24,13 @@ struct FrameBuffer
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++) 
 		{ 
 			totalDataSize += encodedVideoSizes[i];
+
+			size_t audioFrameSize = sizeof(float) * ndiAudioFrames[i].no_samples * ndiAudioFrames[i].no_channels;
+			totalDataSize += audioFrameSize;
 		}
 
 		packedData = (uint8_t*)malloc(totalDataSize); //data buffer used to hold all frame data
-		memcpy(packedData, &totalDataSize, sizeof(FrameBuffer));
+		memcpy(packedData, (uint8_t*)&totalDataSize, sizeof(FrameBuffer));
 
 		size_t localSize = sizeof(FrameBuffer);
 

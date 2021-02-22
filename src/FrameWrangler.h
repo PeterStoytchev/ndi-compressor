@@ -24,7 +24,6 @@ public:
 
 	void Ndi();
 	void Main();
-
 private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;

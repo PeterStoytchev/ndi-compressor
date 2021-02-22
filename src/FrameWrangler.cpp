@@ -13,15 +13,11 @@ FrameWrangler::FrameWrangler(NdiManager* ndiManager, FrameSender* frameSender, E
 	});
 	ndiHandler.detach();
 
-	mainHandler = std::thread([this] {
-		Main();
-	});
-	mainHandler.detach();
+	Main();
 }
 
 FrameWrangler::~FrameWrangler()
 {
-	mainHandler.join();
 	ndiHandler.join();
 }
 
@@ -98,13 +94,13 @@ void FrameWrangler::Main()
 		m_sendingBuffer->totalAudioSize = 0;
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			m_sendingBuffer->encodedVideoSizes[i] = 0;
-
 			m_ndiManager->FreeVideo(&(m_sendingBuffer->ndiVideoFrames[i]));
 			m_ndiManager->FreeAudio(&(m_sendingBuffer->ndiAudioFrames[i]));
 
 			if (m_sendingBuffer->encodedVideoSizes[i] != 0)
 				av_packet_free(&(m_sendingBuffer->encodedVideoPtrs[i]));
+
+			m_sendingBuffer->encodedVideoSizes[i] = 0;
 		}
 	}
 }
