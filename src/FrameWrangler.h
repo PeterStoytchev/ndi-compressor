@@ -29,7 +29,7 @@ private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
-	
+
 	FrameBuffer* m_recvBuffer = new FrameBuffer();
 	FrameBuffer* m_sendingBuffer = new FrameBuffer();
 
@@ -41,6 +41,5 @@ private:
 	std::thread ndiAudioHandler;
 
 	std::atomic<bool> m_exit = false;
-	std::atomic<bool> m_audioDone = false;
-	std::atomic<bool> m_collectionDone = false;
+	std::atomic<unsigned int> m_atomicNdiSync = { 0 };
 };

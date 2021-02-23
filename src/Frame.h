@@ -26,7 +26,6 @@ struct FrameBuffer
 		totalDataSize = sizeof(FrameBuffer);
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++) 
 		{ 
-			assert(encodedVideoSizes[i] != 666);
 			totalDataSize += encodedVideoSizes[i];
 		}
 
