@@ -33,13 +33,14 @@ private:
 	FrameBuffer* m_recvBuffer = new FrameBuffer();
 	FrameBuffer* m_sendingBuffer = new FrameBuffer();
 
-	std::mutex m_ndiMutex;
+	std::mutex m_ndiVideoMutex;
+	std::mutex m_ndiAudioMutex;
 	std::mutex m_cvMutex;
+
 	std::condition_variable m_cv;
 
 	std::thread ndiHandler;
 	std::thread ndiAudioHandler;
 
 	std::atomic<bool> m_exit = false;
-	std::atomic<unsigned int> m_atomicNdiSync = { 0 };
 };

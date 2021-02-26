@@ -1,6 +1,8 @@
 #pragma once
 
-#define __PROFILE
+//#define __PROFILE
+//#define __DEBUGLOG
+
 
 #ifdef __PROFILE
 #include "optik/optick.h"
@@ -12,8 +14,6 @@
 
 
 //this is just a debugging macro that wraps around printf, nothin fancy
-#define __DEBUGLOG
-
 #ifdef __DEBUGLOG
 #define DEBUG_LOG(x) printf(x);
 #else

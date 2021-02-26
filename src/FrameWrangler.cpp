@@ -38,9 +38,10 @@ void FrameWrangler::Ndi()
 	while (!m_exit)
 	{
 		OPTICK_EVENT("NdiVideoCapture");
+
 		DEBUG_LOG("[NdiVideoHandler] Starting new batch\n");
 
-		m_ndiMutex.lock();
+		m_ndiVideoMutex.lock();
 		DEBUG_LOG("[NdiVideoHandler] Got lock\n");
 
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
@@ -67,13 +68,7 @@ void FrameWrangler::Ndi()
 			}
 		}
 
-		DEBUG_LOG("[NdiVideoHandler] Batch capture complete, waiting on audio!\n");
-
-		DEBUG_LOG("[NdiVideoHandler] atomic sync value: %i\n", m_atomicNdiSync.load());
-		while (m_atomicNdiSync < 1); //wait on audio thread
-		m_atomicNdiSync++;
-
-		m_ndiMutex.unlock();
+		m_ndiVideoMutex.unlock();
 		
 		DEBUG_LOG("[NdiVideoHandler] Audio is done, unlocking and waiting for condition_variable!\n");
 
@@ -89,8 +84,10 @@ void FrameWrangler::NdiAudio()
 	while (!m_exit)
 	{
 		OPTICK_EVENT("NdiAudioCapture");
-		DEBUG_LOG("[NdiAudioHandler] Starting new batch\n");
 
+		DEBUG_LOG("[NdiAudioHandler] Starting new batch\n");
+		
+		m_ndiAudioMutex.lock();
 		for (int i = 0; i < FRAME_BATCH_SIZE_AUDIO; i++)
 		{
 			m_recvBuffer->ndiAudioFrames[i] = *m_ndiManager->CaptureAudioFrame();
@@ -98,10 +95,9 @@ void FrameWrangler::NdiAudio()
 			DEBUG_LOG("[NdiAudioHandler] Captured a frame and added it to the FrameBuffer\n");
 		}
 
-		DEBUG_LOG("[NdiAudioHandler] atomic sync value: %i\n", m_atomicNdiSync.load());
-		m_atomicNdiSync++;
-
 		DEBUG_LOG("[NdiAudioHandler] Batch is done, signaled and waiting for condition_variable!\n");
+
+		m_ndiAudioMutex.unlock();
 
 		std::unique_lock<std::mutex> lk(m_cvMutex);
 		m_cv.wait(lk);
@@ -115,15 +111,14 @@ void FrameWrangler::Main()
 	while (!m_exit)
 	{
 		OPTICK_FRAME("MainLoop");
+		
 		DEBUG_LOG("[Main] Starting new iteration! Waiting for confirmaton from client!\n");
 
 		m_frameSender->WaitForConfirmation();
 		DEBUG_LOG("[Main] Got confirmation! Waiting on lock.\n");
 
-		m_ndiMutex.lock();
-
-		while (m_atomicNdiSync < 2); //wait on capture threads
-		m_atomicNdiSync = 0;
+		m_ndiVideoMutex.lock();
+		m_ndiAudioMutex.lock();
 
 		DEBUG_LOG("[Main] Got lock!\n");
 
@@ -132,9 +127,9 @@ void FrameWrangler::Main()
 		m_sendingBuffer = m_recvBuffer;
 		m_recvBuffer = local;
 
-		m_ndiMutex.unlock();
-		m_cv.notify_one();
-		m_cv.notify_one();
+		m_ndiVideoMutex.unlock();
+		m_ndiAudioMutex.unlock();
+		m_cv.notify_all();
 
 		DEBUG_LOG("[Main] Swapped buffers and notified both Ndi threads!\n");
 		DEBUG_LOG("[Main] Sending FrameBuffer to client!\n");
