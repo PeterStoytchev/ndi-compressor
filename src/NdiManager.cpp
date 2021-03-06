@@ -65,22 +65,22 @@ NdiManager::~NdiManager()
 	NDIlib_destroy();
 }
 
-NDIlib_video_frame_v2_t* NdiManager::CaptureVideoFrame()
+NDIlib_video_frame_v2_t NdiManager::CaptureVideoFrame()
 {
 	OPTICK_EVENT();
-	NDIlib_video_frame_v2_t* video_frame = new NDIlib_video_frame_v2_t();
+	NDIlib_video_frame_v2_t video_frame = NDIlib_video_frame_v2_t();
 
-	NDIlib_recv_capture_v2(m_recvInstance, video_frame, nullptr, nullptr, 5000);
+	NDIlib_recv_capture_v2(m_recvInstance, &video_frame, nullptr, nullptr, 5000);
 
 	return video_frame;
 }
 
-NDIlib_audio_frame_v2_t* NdiManager::CaptureAudioFrame()
+NDIlib_audio_frame_v2_t NdiManager::CaptureAudioFrame()
 {
 	OPTICK_EVENT();
 
-	NDIlib_audio_frame_v2_t* audio_frame = new NDIlib_audio_frame_v2_t();
-	NDIlib_recv_capture_v2(m_recvInstance, nullptr, audio_frame, nullptr, 5000);
+	NDIlib_audio_frame_v2_t audio_frame = NDIlib_audio_frame_v2_t();
+	NDIlib_recv_capture_v2(m_recvInstance, nullptr, &audio_frame, nullptr, 5000);
 	
 	return audio_frame;
 }

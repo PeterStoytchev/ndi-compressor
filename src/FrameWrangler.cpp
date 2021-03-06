@@ -46,9 +46,9 @@ void FrameWrangler::Ndi()
 
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
 		{
-			auto video_frame = *m_ndiManager->CaptureVideoFrame();
+			auto video_frame = m_ndiManager->CaptureVideoFrame();
 			auto pkt = m_encoder->Encode(&video_frame);
-			
+
 			DEBUG_LOG("[NdiVideoHandler] Got frame and encoded it!\n");
 
 			if (pkt != nullptr && pkt->size != 0)
@@ -90,7 +90,7 @@ void FrameWrangler::NdiAudio()
 		m_ndiAudioMutex.lock();
 		for (int i = 0; i < FRAME_BATCH_SIZE_AUDIO; i++)
 		{
-			m_recvBuffer->ndiAudioFrames[i] = *m_ndiManager->CaptureAudioFrame();
+			m_recvBuffer->ndiAudioFrames[i] = m_ndiManager->CaptureAudioFrame();
 
 			DEBUG_LOG("[NdiAudioHandler] Captured a frame and added it to the FrameBuffer\n");
 		}
@@ -117,10 +117,13 @@ void FrameWrangler::Main()
 		m_frameSender->WaitForConfirmation();
 		DEBUG_LOG("[Main] Got confirmation! Waiting on lock.\n");
 
-		m_ndiVideoMutex.lock();
-		m_ndiAudioMutex.lock();
+		std::this_thread::sleep_for(std::chrono::milliseconds(5)); //This is dumb but it should fix the thread init issue
 
-		DEBUG_LOG("[Main] Got lock!\n");
+		m_ndiVideoMutex.lock();
+		DEBUG_LOG("[Main] Got video lock!\n");
+
+		m_ndiAudioMutex.lock();
+		DEBUG_LOG("[Main] Got audio lock!\n");
 
 		//swap the two buffers
 		FrameBuffer* local = m_sendingBuffer;
@@ -137,10 +140,7 @@ void FrameWrangler::Main()
 		m_frameSender->SendFrameBuffer(m_sendingBuffer);
 
 		DEBUG_LOG("[Main] Buffer sent! Resetting buffer state.\n");
-
-		//reset the buffer state
-		free(m_sendingBuffer->packedData);
-
+		
 		m_sendingBuffer->totalDataSize = 0;
 		m_sendingBuffer->totalAudioSize = 0;
 		for (int i = 0; i < FRAME_BATCH_SIZE; i++)
@@ -157,6 +157,9 @@ void FrameWrangler::Main()
 		{
 			m_ndiManager->FreeAudio(&(m_sendingBuffer->ndiAudioFrames[i]));
 		}
+
+		//reset the packed buffer @Speed to be a fixed growable buffer later
+		free(m_sendingBuffer->packedData);
 
 		DEBUG_LOG("[Main] Buffer state reset!\n");
 	}
