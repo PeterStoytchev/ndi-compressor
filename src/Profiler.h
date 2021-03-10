@@ -1,11 +1,8 @@
 #pragma once
 
-//#define __PROFILE
-//#define __DEBUGLOG
-
-
+//profiling macro
 #ifdef __PROFILE
-#include "optik/optick.h"
+#include "../optik/optick.h"
 #else
 #define OPTICK_EVENT(name)
 #define OPTICK_FRAME(name)
