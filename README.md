@@ -8,10 +8,10 @@ Keep in mind that this is a hobby project created by a novice. Do not expect mir
 I will keep the master branch stable, and will push anything new to dev (as is customary).
 
 # How to compile and install.
-1. Clone the repo.
-2. Open in Visual Studio (developed on VS2019, it will probably work on older versions, as long as C++17 is supported)
-3. Set the configuration to Debug or Release, depending on what you want, and arch to x64. x64 is what the included libs are compiled for. If you want x86, recompile the libs yourself, replace them and set the config to x86.
-4. Build the solution.
+1. Install premake5, if you don't have it installed already.
+2. Clone the repo.
+3. Run "premake5 vs2019" to generate VS2019 project files. If you want to build with something else, refer to the premake docs for that. (developed on VS2019, it will probably work on older versions, as long as C++17 is supported)
+4. Build it. (Note: If you want to build for anything else, aside from Windows x86_64, you will need to recompile the libraries and replace them in the vendor folder)
 5. Copy the config.yaml file next to the newly build .exe and change it as needed.
 6. From the redist directory, copy all the files next to the new .exe
 7. Run the compressor.
@@ -28,13 +28,13 @@ priv_data: This sets additional options for the encoder. This is very encoder de
 # Notes
 NOTE: Currently the ndi-server is both the server and decompressor. It doesn't really resend anything to anyone. It just receves a signal and transforms it into a NDI source.
 
-NOTE 2: This is, and always will be (or at least until NewTek release a cross-platform version of the SDK) Windows only, unlike the ndi-server, which eventually will be cross-platform.
+NOTE 2: Despite having added premake support, this is still only available for Windows. I have noticed that there is a SDK for Linux, so eventually I will add support.
 
 # Updates
 UPDATE 1: Multi-threading the various stages ended up being not a good idea, impact was negative in my testing. Currently the system is back to a single thread for video and another one for audio. I may revisit the idea at some point. Did some testing over WAN and network performance is currently a big problem. This is my main issue to solve. It works well over LAN (duh, so does NDI) as well as Wi-Fi as long as the bitrate is kept in check.
-I also added support for the Optik profiler. By default it is enabled, if you want to disable it, remove the "#define __PROFILE" in Profiler.h and recompile.
+
+UPDATE 2: Apperantly, I didn't know what I was doing when I last tried to multi-thread the compressor. So, yea. Multi-threading is back, but in a diffirent form. The biggest change, compared to before, is frame batching, which is currently baked in to 30 video and 24 audio frames per batch.
 
 # TODO
-1. Build system support.
-2. Build most of the dependencies with the build system, instead of including precompiled binaries (aside from NDI lib, which isn't open source)
-3. Some sort of compression for audio. Currently thinking ZLib or LZ4, but could also be fed into ffmpeg.
+1. Build most of the dependencies with the build system, instead of including precompiled binaries (aside from NDI lib, which isn't open source)
+2. Some sort of compression for audio. Currently thinking ZLib or LZ4, but could also be fed into ffmpeg.
