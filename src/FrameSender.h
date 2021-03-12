@@ -18,19 +18,16 @@
 
 #include "Frame.h"
 
+
 class FrameSender
 {
 public:
-	FrameSender(const char* host, in_port_t videoPort, in_port_t audioPort);
+	FrameSender(const char* host, in_port_t videoPort);
 	~FrameSender();
 
-	void SendVideoFrame(VideoFrame* frame);
-	void SendAudioFrame(NDIlib_audio_frame_v2_t* ndi_frame);
+	void SendFrameBuffer(FrameBuffer* buffer);
 
 	void WaitForConfirmation();
-
 private:
-	sockpp::tcp_connector m_videoConn;
-	sockpp::tcp_connector m_videoConnAux;
-	sockpp::tcp_connector m_audioConn;
+	sockpp::tcp_connector m_conn;
 };

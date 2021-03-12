@@ -4,6 +4,7 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
+#include <condition_variable>
 
 #include "Processing.NDI.Lib.h"
 
@@ -11,6 +12,7 @@
 #include "Frame.h"
 #include "NdiManager.h"
 #include "FrameSender.h"
+
 
 class FrameWrangler
 {
@@ -20,18 +22,25 @@ public:
 
 	void Stop();
 
+	void Ndi();
+	void NdiAudio();
 	void Main();
 private:
 	Encoder* m_encoder;
 	NdiManager* m_ndiManager;
 	FrameSender* m_frameSender;
 
-	std::thread mainHandler;
+	FrameBuffer* m_recvBuffer = new FrameBuffer();
+	FrameBuffer* m_sendingBuffer = new FrameBuffer();
+
+	std::mutex m_ndiVideoMutex;
+	std::mutex m_ndiAudioMutex;
+	std::mutex m_cvMutex;
+
+	std::condition_variable m_cv;
+
+	std::thread ndiHandler;
+	std::thread ndiAudioHandler;
 
 	std::atomic<bool> m_exit = false;
-	bool m_LastFrameGood = true;
-
-	uint8_t* bsBuffer = (uint8_t*)malloc(2);
-
-	uint64_t lastid = 0;
 };

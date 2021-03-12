@@ -52,7 +52,7 @@ Encoder::Encoder(EncoderSettings settings)
 
 AVPacket* Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 {
-	PROFILE_FUNC();
+	OPTICK_EVENT();
 
 	ret = av_frame_make_writable(frame);
 
@@ -62,7 +62,10 @@ AVPacket* Encoder::Encode(NDIlib_video_frame_v2_t* ndi_frame)
 	uint8_t* outData[3] = { frame->data[0], frame->data[1], frame->data[2] };
 	int outLinesize[3] = { m_settings.xres, m_settings.xres / 2, m_settings.xres / 2 };
 
-	sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
+	{
+		OPTICK_EVENT("sws_scale");
+		sws_scale(swsContext, data, linesize, 0, m_settings.yres, outData, outLinesize);
+	}
 
 	frame->pts = i;
 

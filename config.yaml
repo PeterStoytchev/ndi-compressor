@@ -3,8 +3,8 @@ videoPort: 1337
 audioPort: 1338
 ndiSrcName: DESKTOP-G0O595D (wronghousefool)
 encoderName: h264_nvenc
-bitrateMbps: 25
-gop_size: 60
+bitrateMbps: 10
+gop_size: 3600
 max_b_frames: 0
 thread_count: 16
 xres: 1920
@@ -13,4 +13,4 @@ fps: 60
 priv_data:
  preset: llhq
  tier: high
- spatial_aq: 1
+ rc: cbr
