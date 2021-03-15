@@ -4,3 +4,6 @@
 [submodule "vendor\\libyaml"]
 	path = vendor\\libyaml
 	url = https://github.com/PeterStoytchev/libyaml.git
+[submodule "vendor/yaml-cpp"]
+	path = vendor/yaml-cpp
+	url = https://github.com/PeterStoytchev/yaml-cpp.git

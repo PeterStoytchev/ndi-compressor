@@ -27,7 +27,7 @@ project "ndi-compressor"
 	includedirs
 	{
 		"%{prj.location}/vendor/sockpp/include/",
-		"%{prj.location}/vendor/libyaml/include/",
+		"%{prj.location}/vendor/yaml-cpp/include/",
 		"%{prj.location}/vendor/Processing-NDI-Lib/include/",
 		"%{prj.location}/vendor/avlibs/include/"
 	}
@@ -35,7 +35,7 @@ project "ndi-compressor"
 	libdirs
 	{
 		"%{prj.location}/vendor/sockpp/bin/sockpp-%{cfg.system}-%{cfg.architecture}/",
-		"%{prj.location}/vendor/libyaml/bin/libyaml-%{cfg.system}-%{cfg.architecture}/",
+		"%{prj.location}/vendor/yaml-cpp/bin/yaml-cpp-%{cfg.system}-%{cfg.architecture}/",
 		"%{prj.location}/vendor/Processing-NDI-Lib/lib/",
 		"%{prj.location}/vendor/avlibs/lib/"
 	}
@@ -49,7 +49,7 @@ project "ndi-compressor"
 			"avcodec",
 			"avutil",
 			"swscale",
-			"libyaml",
+			"yaml-cpp",
 			"Processing.NDI.Lib.x64"
 		}
 		
@@ -60,7 +60,7 @@ project "ndi-compressor"
 			"avcodec",
 			"avutil",
 			"swscale",
-			"libyaml",
+			"yaml-cpp",
 			"Processing.NDI.Lib.x64"
 		}
 	
@@ -98,4 +98,4 @@ project "ndi-compressor"
 		}
 		
 include "vendor/sockpp/"
-include "vendor/libyaml/"
+include "vendor/yaml-cpp/"

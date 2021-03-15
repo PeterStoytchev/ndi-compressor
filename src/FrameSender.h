@@ -5,14 +5,6 @@
 
 #include "Processing.NDI.Lib.h"
 
-#ifdef _DEBUG
-#pragma comment(lib, "sockpp-debug")
-#endif // _DEBUG
-
-#ifndef _DEBUG
-#pragma comment(lib, "sockpp-release")
-#endif
-
 #include "sockpp/tcp_connector.h"
 
 #include "Frame.h"

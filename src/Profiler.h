@@ -2,7 +2,7 @@
 
 //profiling macro
 #ifdef __PROFILE
-#include "../optik/optick.h"
+#include "../vendor/optik/optick.h"
 #else
 #define OPTICK_EVENT(name)
 #define OPTICK_FRAME(name)

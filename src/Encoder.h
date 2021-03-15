@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "Processing.NDI.Lib.h"
 
-#include "yaml.h"
+#include "yaml-cpp/yaml.h"
 
 extern "C"
 {

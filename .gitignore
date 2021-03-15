@@ -5,12 +5,12 @@
 
 bin/
 bin-inter/
-bit-int/
 
 *.json
 *.sln
 *.vcxproj
 *.vcxproj.user
+*.vcxproj.filters
 
 # User-specific files
 *.rsuser
