@@ -8,6 +8,9 @@ bin-inter/
 bit-int/
 
 *.json
+*.sln
+*.vcxproj
+*.vcxproj.user
 
 # User-specific files
 *.rsuser

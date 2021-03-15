@@ -1,0 +1,6 @@
+[submodule "vendor\\sockpp"]
+	path = vendor\\sockpp
+	url = https://github.com/PeterStoytchev/sockpp.git
+[submodule "vendor\\libyaml"]
+	path = vendor\\libyaml
+	url = https://github.com/PeterStoytchev/libyaml.git

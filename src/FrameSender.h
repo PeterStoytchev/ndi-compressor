@@ -14,7 +14,6 @@
 #endif
 
 #include "sockpp/tcp_connector.h"
-#include "sockpp/version.h"
 
 #include "Frame.h"
 

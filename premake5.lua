@@ -1,6 +1,6 @@
 workspace "ndi-compressor"
-	architecture "x86_64"
 	startproject "ndi-compressor"
+	architecture "x86_64"
 	
 	configurations
 	{
@@ -15,7 +15,6 @@ workspace "ndi-compressor"
 	}
 	
 	
-	
 project "ndi-compressor"
 	kind "ConsoleApp"
 	language "C++"
@@ -25,26 +24,46 @@ project "ndi-compressor"
 	targetdir ("%{prj.location}/bin/%{prj.name}-%{cfg.system}-%{cfg.architecture}/")
 	objdir ("%{prj.location}/bin-int/%{prj.name}-%{cfg.system}-%{cfg.architecture}/")
 
-
 	includedirs
 	{
-		"%{prj.location}/vendor/include"
-	}
-	
-	links
-	{ 
-		"ws2_32",
-		"Processing.NDI.Lib.x64"
+		"%{prj.location}/vendor/sockpp/include/",
+		"%{prj.location}/vendor/libyaml/include/",
+		"%{prj.location}/vendor/Processing-NDI-Lib/include/",
+		"%{prj.location}/vendor/avlibs/include/"
 	}
 	
 	libdirs
-	{ 
-		"%{prj.location}/vendor/lib" 
+	{
+		"%{prj.location}/vendor/sockpp/bin/sockpp-%{cfg.system}-%{cfg.architecture}/",
+		"%{prj.location}/vendor/libyaml/bin/libyaml-%{cfg.system}-%{cfg.architecture}/",
+		"%{prj.location}/vendor/Processing-NDI-Lib/lib/",
+		"%{prj.location}/vendor/avlibs/lib/"
 	}
-
+	
 	filter "system:windows"
 		systemversion "latest"
-
+		links
+		{
+			"ws2_32",
+			"sockpp",
+			"avcodec",
+			"avutil",
+			"swscale",
+			"libyaml",
+			"Processing.NDI.Lib.x64"
+		}
+		
+	filter "system:not_windows"
+		links
+		{
+			"sockpp",
+			"avcodec",
+			"avutil",
+			"swscale",
+			"libyaml",
+			"Processing.NDI.Lib.x64"
+		}
+	
 	filter "configurations:Debug"
 		defines "__DEBUGLOG"
 		runtime "Debug"
@@ -55,6 +74,7 @@ project "ndi-compressor"
 			"src/**.cpp"
 		}
 
+	
 	filter "configurations:Release"
 		defines "NDEBUG"
 		runtime "Release"
@@ -76,3 +96,6 @@ project "ndi-compressor"
 			"vendor/optik/**.h",
 			"vendor/optik/**.cpp"
 		}
+		
+include "vendor/sockpp/"
+include "vendor/libyaml/"
