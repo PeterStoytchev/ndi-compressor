@@ -26,9 +26,7 @@ thread_count: This doesn't really do anything for encoders like NVENC, for other
 priv_data: This sets additional options for the encoder. This is very encoder dependent, so look them up for the encoder you use (ffmpeg -hide_banner -h encoder=[encoder name goes here]). Make sure to keep the spacing for the options the same, because it has to be parsed into a YAML map. Notepad++ handles the spacing automatically when you hit enter to go to a new line.
 
 # Notes
-NOTE: Currently the ndi-server is both the server and decompressor. It doesn't really resend anything to anyone. It just receves a signal and transforms it into a NDI source.
-
-NOTE 2: Despite having added premake support, this is still only available for Windows. I have noticed that there is a SDK for Linux, so eventually I will add support.
+NOTE: Despite having added premake support, this is still only available for Windows. I have noticed that there is a SDK for Linux, so eventually I will add support.
 
 # Updates
 UPDATE 1: Multi-threading the various stages ended up being not a good idea, impact was negative in my testing. Currently the system is back to a single thread for video and another one for audio. I may revisit the idea at some point. Did some testing over WAN and network performance is currently a big problem. This is my main issue to solve. It works well over LAN (duh, so does NDI) as well as Wi-Fi as long as the bitrate is kept in check.
@@ -36,5 +34,4 @@ UPDATE 1: Multi-threading the various stages ended up being not a good idea, imp
 UPDATE 2: Apperantly, I didn't know what I was doing when I last tried to multi-thread the compressor. So, yea. Multi-threading is back, but in a diffirent form. The biggest change, compared to before, is frame batching, which is currently baked in to 30 video and 24 audio frames per batch.
 
 # TODO
-1. Build most of the dependencies with the build system, instead of including precompiled binaries (aside from NDI lib, which isn't open source)
-2. Some sort of compression for audio. Currently thinking ZLib or LZ4, but could also be fed into ffmpeg.
+1. Some sort of compression for audio. Currently thinking ZLib or LZ4, but could also be fed into ffmpeg.
