@@ -1,7 +1,7 @@
 # ndi-compressor
 Compresses a NDI source and outputs it to a ndi-server (another repo you can find on my account). Effectevly, this is a hacky implementation for NDI-HX, but it most certanly won't be as good compared to a hardware encoder, or if NewTek decide to release an actual NDI-HX software encoder (PLEASE DO IT).
 
-You can think of the whole system, as an adapter, that sits in-between an NDI source and viewer. It captures the signal from the NDI source, compresses it (using ffmpeg libraries), sends it across the network (sockpp) to a server which will distribute it to ndi-compressor(s) which decompress it and turns it back into a NDI source which viewers can view. This enables NDI over low bandwidth networks, such as Wi-Fi or WAN, without the need for NDI-HX hardware or services which, essentailly, do the same thing (compress the signal to reduce bandwith).
+You can think of the whole system, as an adapter, that sits in-between an NDI source and viewer. It captures the signal from the NDI source, compresses it (using ffmpeg libraries), sends it across the network (sockpp) to a server which will distribute it to ndi-compressor(s) which decompress it and turns it back into a NDI source which viewers can view. This enables NDI over low bandwidth networks, such as Wi-Fi or WAN, without the need for NDI-HX hardware or services which, essentailly, do the same thing (compress the signal to reduce bandwith). Currently, it has been tested only with OBS, so NDI sources that create use a video/audio diffirent format, will not work. 
 
 Keep in mind that this is a hobby project created by a novice. Do not expect miracles. That said, I will try and make it as good as possible.
 
